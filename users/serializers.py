@@ -1,16 +1,44 @@
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Bookmark, ReadingProgress, ChildProfile, ReadingStreak, Achievement, UserAchievement
 from content_pipeline.serializers import NewsEventSerializer
+
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(write_only=True)
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+    password_confirm = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'email', 'password', 'password_confirm')
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match.'})
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('password_confirm')
+        user = CustomUser.objects.create_user(**validated_data)
+        return user
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'password')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'is_active')
+        read_only_fields = ('id', 'date_joined', 'is_active')
+        extra_kwargs = {
+            'email': {'required': False},
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+        }
 
-    def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
-        return user
 
 class BookmarkSerializer(serializers.ModelSerializer):
     news_event = NewsEventSerializer(read_only=True)
@@ -19,13 +47,13 @@ class BookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Bookmark
         fields = ('id', 'user', 'news_event', 'news_event_id', 'created_at')
-        read_only_fields = ('user',)
+        read_only_fields = ('id', 'user', 'created_at')
 
     def create(self, validated_data):
         news_event_id = validated_data.pop('news_event_id')
-        user = self.context['request'].user
-        bookmark = Bookmark.objects.create(user=user, news_event_id=news_event_id, **validated_data)
+        bookmark = Bookmark.objects.create(news_event_id=news_event_id, **validated_data)
         return bookmark
+
 
 class ReadingProgressSerializer(serializers.ModelSerializer):
     news_event = NewsEventSerializer(read_only=True)
@@ -34,11 +62,11 @@ class ReadingProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingProgress
         fields = ('id', 'user', 'news_event', 'news_event_id', 'completed', 'last_read_at')
-        read_only_fields = ('user', 'last_read_at')
+        read_only_fields = ('id', 'user', 'last_read_at')
 
     def create(self, validated_data):
         news_event_id = validated_data.pop('news_event_id', None)
-        user = self.context['request'].user
+        user = validated_data.get('user')
         reading_progress, created = ReadingProgress.objects.get_or_create(
             user=user,
             news_event_id=news_event_id,
@@ -54,26 +82,32 @@ class ReadingProgressSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 class ChildProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChildProfile
         fields = ('id', 'user', 'name', 'age', 'reading_level', 'created_at', 'updated_at')
-        read_only_fields = ('user',)
+        read_only_fields = ('id', 'user', 'created_at', 'updated_at')
 
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        return ChildProfile.objects.create(**validated_data)
+    def validate_age(self, value):
+        if value < 1 or value > 18:
+            raise serializers.ValidationError('Age must be between 1 and 18.')
+        return value
+
 
 class ReadingStreakSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingStreak
         fields = ('id', 'user', 'current_streak', 'longest_streak', 'last_read_date', 'updated_at')
-        read_only_fields = ('user', 'current_streak', 'longest_streak', 'last_read_date', 'updated_at')
+        read_only_fields = ('id', 'user', 'current_streak', 'longest_streak', 'last_read_date', 'updated_at')
+
 
 class AchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Achievement
-        fields = '__all__'
+        fields = ('id', 'name', 'description', 'image_url')
+        read_only_fields = ('id', 'name', 'description', 'image_url')
+
 
 class UserAchievementSerializer(serializers.ModelSerializer):
     achievement = AchievementSerializer(read_only=True)
@@ -81,4 +115,4 @@ class UserAchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAchievement
         fields = ('id', 'user', 'achievement', 'achieved_at')
-        read_only_fields = ('user', 'achievement', 'achieved_at')
+        read_only_fields = ('id', 'user', 'achievement', 'achieved_at')
