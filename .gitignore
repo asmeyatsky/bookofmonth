@@ -1,0 +1,22 @@
+# Node
+node_modules/
+package-lock.json
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.sqlite3
+
+# macOS
+.DS_Store
+
+# Generated images
+generated_images/
+
+# IDE files
+.idea/
+.vscode/
+
+# Environment variables
+.env
