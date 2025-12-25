@@ -4,6 +4,7 @@ import requests
 from unittest.mock import patch, MagicMock
 from content_pipeline.infrastructure.adapters.image_generation_adapter import ImageGenerationAdapter
 
+
 class TestImageGenerationAdapter(unittest.TestCase):
 
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test_api_key"})
@@ -41,7 +42,9 @@ class TestImageGenerationAdapter(unittest.TestCase):
         self.assertIn(prompt, kwargs['json']['contents'][0]['parts'][0]['text'])
         self.assertIn(style, kwargs['json']['contents'][0]['parts'][0]['text'])
         self.assertIsNotNone(result)
-        self.assertEqual(result['image_url'], f"https://picsum.photos/seed/{hash(prompt)}/800/600")
+        # Note: image_path is None when no inline image data is in response
+        self.assertIn('image_path', result)
+        self.assertIn('metadata', result)
 
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test_api_key"})
     @patch("requests.post")
@@ -58,7 +61,7 @@ class TestImageGenerationAdapter(unittest.TestCase):
 
         # Assert
         self.assertIsNotNone(result)
-        self.assertIsNone(result['image_url'])
+        self.assertIsNone(result['image_path'])
         self.assertIn("error", result['metadata'])
 
     def test_missing_api_key(self):
@@ -69,6 +72,7 @@ class TestImageGenerationAdapter(unittest.TestCase):
         # Act & Assert
         with self.assertRaises(ValueError):
             ImageGenerationAdapter()
+
 
 if __name__ == '__main__':
     unittest.main()

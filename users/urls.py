@@ -3,7 +3,8 @@ from rest_framework import routers
 from .views import (
     UserViewSet, BookmarkViewSet, ReadingProgressViewSet, ChildProfileViewSet,
     ReadingStreakViewSet, AchievementViewSet, UserAchievementViewSet,
-    RegisterView, LoginView, LogoutView
+    RegisterView, LoginView, LogoutView,
+    PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView
 )
 
 router = routers.DefaultRouter()
@@ -20,4 +21,7 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+    path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
+    path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
+    path('change-password/', ChangePasswordView.as_view(), name='change-password'),
 ]

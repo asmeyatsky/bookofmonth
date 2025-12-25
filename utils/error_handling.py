@@ -97,19 +97,31 @@ def custom_exception_handler(exc, context):
     
     # Enhance DRF's error response with our standard format
     if response is not None:
+        # Handle different response data formats
+        if isinstance(response.data, dict):
+            message = response.data.get('detail', 'Validation error')
+            details = response.data
+        elif isinstance(response.data, list):
+            # Handle list format (e.g., ValidationError with list of errors)
+            message = str(response.data[0]) if response.data else 'Validation error'
+            details = {'errors': response.data}
+        else:
+            message = str(response.data)
+            details = {}
+
         custom_response_data = {
             'success': False,
             'error': {
-                'message': response.data.get('detail', 'Validation error'),
+                'message': message,
                 'code': 'VALIDATION_ERROR',
-                'details': response.data if isinstance(response.data, dict) else {}
+                'details': details
             }
         }
-        
+
         # Preserve status code
         response.data = custom_response_data
         return response
-    
+
     return response
 
 

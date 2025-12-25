@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
+    'django_celery_beat',
     'content_pipeline',
     'book_assembly',
     'users',
@@ -250,3 +251,39 @@ if 'drf_yasg' in INSTALLED_APPS:
         'TAGS_SORTER': 'alpha',
         'DOC_EXPANSION': 'none',
     }
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/0')
+
+# Celery Beat Schedule - Periodic Tasks
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'process-daily-content': {
+        'task': 'users.tasks.process_daily_content',
+        'schedule': crontab(hour=6, minute=0),  # Run at 6 AM UTC daily
+    },
+    'send-reading-reminders': {
+        'task': 'users.tasks.send_reading_reminder',
+        'schedule': crontab(hour=18, minute=0),  # Run at 6 PM UTC daily
+    },
+    'cleanup-old-sessions': {
+        'task': 'users.tasks.cleanup_old_sessions',
+        'schedule': crontab(hour=3, minute=0, day_of_week=0),  # Run at 3 AM UTC on Sundays
+    },
+    'generate-monthly-book': {
+        'task': 'users.tasks.generate_monthly_book',
+        'schedule': crontab(hour=0, minute=0, day_of_month=1),  # Run at midnight on 1st of each month
+        'kwargs': {'year': None, 'month': None},  # Will be determined dynamically in task
+    },
+}
+
+# Email Configuration
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@bookofmonth.com')

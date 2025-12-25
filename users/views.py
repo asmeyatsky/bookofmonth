@@ -4,12 +4,18 @@ from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from .models import CustomUser, Bookmark, ReadingProgress, ChildProfile, ReadingStreak, Achievement, UserAchievement
 from .services import AchievementService
 from .serializers import (
     UserSerializer, BookmarkSerializer, ReadingProgressSerializer,
     ChildProfileSerializer, ReadingStreakSerializer, AchievementSerializer,
-    UserAchievementSerializer, LoginSerializer, RegisterSerializer
+    UserAchievementSerializer, LoginSerializer, RegisterSerializer,
+    PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
 )
 from content_pipeline.models import NewsEventModel
 
@@ -297,3 +303,114 @@ class UserAchievementViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+
+
+class PasswordResetRequestView(APIView):
+    """Request a password reset email."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data['email']
+        user = CustomUser.objects.get(email=email)
+
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        reset_url = f"{request.build_absolute_uri('/').rstrip('/')}/reset-password/{uid}/{token}/"
+
+        send_mail(
+            subject='Password Reset Request - Book of the Month',
+            message=f'''
+Hi {user.username},
+
+You requested a password reset for your Book of the Month account.
+
+Click the link below to reset your password:
+{reset_url}
+
+If you didn't request this, please ignore this email.
+
+Best regards,
+The Book of the Month Team
+            ''',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        return Response({
+            'message': 'Password reset email sent successfully.'
+        })
+
+
+class PasswordResetConfirmView(APIView):
+    """Confirm password reset with token."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = serializer.validated_data['token']
+
+        # Token format: uid-token
+        try:
+            uid_token = token.split('-', 1)
+            if len(uid_token) != 2:
+                return Response(
+                    {'error': 'Invalid token format'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            uid, actual_token = uid_token
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = CustomUser.objects.get(pk=user_id)
+        except (TypeError, ValueError, CustomUser.DoesNotExist):
+            return Response(
+                {'error': 'Invalid reset token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not default_token_generator.check_token(user, actual_token):
+            return Response(
+                {'error': 'Invalid or expired reset token'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(serializer.validated_data['password'])
+        user.save()
+
+        return Response({
+            'message': 'Password reset successfully.'
+        })
+
+
+class ChangePasswordView(APIView):
+    """Change password for authenticated user."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response(
+                {'error': 'Current password is incorrect'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+
+        # Invalidate old token and create a new one
+        Token.objects.filter(user=user).delete()
+        new_token = Token.objects.create(user=user)
+
+        return Response({
+            'message': 'Password changed successfully.',
+            'token': new_token.key
+        })

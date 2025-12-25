@@ -159,6 +159,21 @@ class ApiService {
     async searchNewsEvents(query: string) {
         return this.request<any>(`/content/news-events/?search=${encodeURIComponent(query)}`);
     }
+
+    // Quiz Submissions (requires auth)
+    async submitQuiz(quizId: string, answers: { question: string; selected_answer: string }[]) {
+        return this.request<any>('/quizzes/submissions/', {
+            method: 'POST',
+            body: { quiz: quizId, answers },
+            requiresAuth: true,
+        });
+    }
+
+    async getQuizSubmission(quizId: string) {
+        return this.request<any>(`/quizzes/submissions/by_quiz/?quiz_id=${quizId}`, {
+            requiresAuth: true,
+        });
+    }
 }
 
 export const apiService = new ApiService();

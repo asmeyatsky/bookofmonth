@@ -1,23 +1,39 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Button, Alert, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { apiService } from '../services/ApiService';
+import { authService } from '../services/AuthService';
+
+interface Question {
+    id: string;
+    text: string;
+    options: string[];
+    correct_answer: string;
+}
+
+interface Quiz {
+    id: string;
+    title: string;
+    questions: Question[];
+}
 
 const QuizScreen = () => {
-    const [quiz, setQuiz] = useState(null);
+    const [quiz, setQuiz] = useState<Quiz | null>(null);
     const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [selectedAnswers, setSelectedAnswers] = useState<{ [key: string]: string }>({});
     const [showResults, setShowResults] = useState(false);
+    const [submissionResult, setSubmissionResult] = useState<{ score: number; total: number } | null>(null);
     const navigation = useNavigation();
     const route = useRoute();
-    const { bookId } = route.params as { bookId: string }; // Get bookId from route params
+    const { bookId } = route.params as { bookId: string };
 
     useEffect(() => {
-        // Fetch quiz for the given bookId
         fetch(`http://localhost:8000/api/quizzes/quizzes/?monthly_book=${bookId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.results && data.results.length > 0) {
-                    setQuiz(data.results[0]); // Assuming one quiz per book
+                    setQuiz(data.results[0]);
                 }
                 setLoading(false);
             })
@@ -35,14 +51,42 @@ const QuizScreen = () => {
         }));
     };
 
-    const handleSubmitQuiz = () => {
+    const handleSubmitQuiz = async () => {
+        if (!quiz) return;
+
+        const isAuthenticated = authService.isAuthenticated();
+
+        if (isAuthenticated) {
+            setSubmitting(true);
+            try {
+                const answers = Object.entries(selectedAnswers).map(([questionId, answer]) => ({
+                    question: questionId,
+                    selected_answer: answer,
+                }));
+
+                const result = await apiService.submitQuiz(quiz.id, answers);
+                setSubmissionResult({
+                    score: result.score,
+                    total: result.total_questions,
+                });
+            } catch (error: any) {
+                if (error.message.includes('already submitted')) {
+                    Alert.alert("Already Submitted", "You have already completed this quiz.");
+                } else {
+                    console.error("Error submitting quiz:", error);
+                }
+            } finally {
+                setSubmitting(false);
+            }
+        }
+
         setShowResults(true);
     };
 
     const calculateScore = () => {
         if (!quiz || !quiz.questions) return 0;
         let score = 0;
-        quiz.questions.forEach((question: any) => {
+        quiz.questions.forEach((question: Question) => {
             if (selectedAnswers[question.id] === question.correct_answer) {
                 score++;
             }
@@ -62,12 +106,15 @@ const QuizScreen = () => {
         );
     }
 
+    const displayScore = submissionResult ? submissionResult.score : calculateScore();
+    const displayTotal = submissionResult ? submissionResult.total : quiz.questions.length;
+
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{quiz.title}</Text>
             <FlatList
                 data={quiz.questions}
-                keyExtractor={(item: any) => item.id.toString()}
+                keyExtractor={(item: Question) => item.id.toString()}
                 renderItem={({ item: question }) => (
                     <View style={styles.questionContainer}>
                         <Text style={styles.questionText}>{question.text}</Text>
@@ -89,10 +136,14 @@ const QuizScreen = () => {
                 )}
             />
             {!showResults ? (
-                <Button title="Submit Quiz" onPress={handleSubmitQuiz} />
+                <Button
+                    title={submitting ? "Submitting..." : "Submit Quiz"}
+                    onPress={handleSubmitQuiz}
+                    disabled={submitting}
+                />
             ) : (
                 <View>
-                    <Text style={styles.resultsText}>Your Score: {calculateScore()} / {quiz.questions.length}</Text>
+                    <Text style={styles.resultsText}>Your Score: {displayScore} / {displayTotal}</Text>
                     <Button title="Go Back" onPress={() => navigation.goBack()} />
                 </View>
             )}
@@ -152,10 +203,10 @@ const styles = StyleSheet.create({
         backgroundColor: '#a0d4ff',
     },
     correctOption: {
-        backgroundColor: '#d4edda', // Green for correct
+        backgroundColor: '#d4edda',
     },
     incorrectOption: {
-        backgroundColor: '#f8d7da', // Red for incorrect
+        backgroundColor: '#f8d7da',
     },
     optionText: {
         fontSize: 16,

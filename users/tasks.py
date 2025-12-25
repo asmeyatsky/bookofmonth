@@ -64,21 +64,32 @@ def process_daily_content(self):
         self.retry(exc=exc, countdown=300)
 
 @shared_task(bind=True, max_retries=3)
-def generate_monthly_book(self, year, month):
+def generate_monthly_book(self, year=None, month=None):
     """Generate monthly book and associated content."""
     try:
+        from datetime import datetime
         from book_assembly.application.use_cases.assemble_book_use_case import AssembleBookUseCase
         from book_assembly.infrastructure.repositories.monthly_book_repository import DjangoMonthlyBookRepository
         from content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
-        
+
+        # Determine year and month if not provided (previous month)
+        if year is None or month is None:
+            today = datetime.now()
+            if today.month == 1:
+                year = today.year - 1
+                month = 12
+            else:
+                year = today.year
+                month = today.month - 1
+
         # Initialize repositories and services
         news_event_repository = DjangoNewsEventRepository()
         monthly_book_repository = DjangoMonthlyBookRepository()
-        
+
         # This would need the service to be properly initialized
         # For now, just return a status
         return f"Book generation initiated for {month}/{year}"
-        
+
     except Exception as exc:
         self.retry(exc=exc, countdown=600)
 

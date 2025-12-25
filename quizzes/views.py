@@ -2,8 +2,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Quiz, Question, QuizSubmission, QuizAnswer
 from .serializers import QuizSerializer, QuestionSerializer, QuizSubmissionSerializer
+from .filters import QuizFilter
 from utils.error_handling import error_response, success_response, validate_required_fields
 
 
@@ -15,6 +17,8 @@ class QuizViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Quiz.objects.all()
     serializer_class = QuizSerializer
     permission_classes = [permissions.AllowAny]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = QuizFilter
 
 
 class QuestionViewSet(viewsets.ReadOnlyModelViewSet):
