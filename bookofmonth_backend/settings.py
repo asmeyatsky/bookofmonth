@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Environment-specific settings
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -91,12 +94,28 @@ WSGI_APPLICATION = 'bookofmonth_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if ENVIRONMENT == 'production':
+    # PostgreSQL for production
+    import dj_database_url
+    
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-}
+    
+    # Connection pool settings for production
+    DATABASES['default']['CONN_MAX_AGE'] = 60
+    DATABASES['default']['OPTIONS'] = {
+        'MAX_CONNS': 20,
+        'MIN_CONNS': 5,
+    }
+else:
+    # SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Caches
 # https://django-redis.readthedocs.io/en/latest/
@@ -200,3 +219,34 @@ if not DEBUG:
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# API Documentation Settings
+if os.environ.get('ENVIRONMENT', 'development') == 'development':
+    INSTALLED_APPS += [
+        'drf_yasg',
+    ]
+
+# API Documentation Configuration
+if 'drf_yasg' in INSTALLED_APPS:
+    SWAGGER_SETTINGS = {
+        'SECURITY_DEFINITIONS': {
+            'Token': {
+                'type': 'apiKey',
+                'name': 'Authorization',
+                'in': 'header',
+                'description': 'Token-based authentication. Format: Token <your-token>',
+            }
+        },
+        'USE_SESSION_AUTH': False,
+        'JSON_EDITOR': True,
+        'SUPPORTED_SUBMIT_METHODS': [
+            'get',
+            'post',
+            'put',
+            'delete',
+            'patch'
+        ],
+        'OPERATIONS_SORTER': 'alpha',
+        'TAGS_SORTER': 'alpha',
+        'DOC_EXPANSION': 'none',
+    }
