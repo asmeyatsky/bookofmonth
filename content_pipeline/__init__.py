@@ -1,0 +1,1 @@
+default_app_config = 'content_pipeline.apps.ContentPipelineConfig'

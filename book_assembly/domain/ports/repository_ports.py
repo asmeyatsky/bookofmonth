@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 import uuid
-from backend.book_assembly.domain.entities import MonthlyBook
+from book_assembly.domain.entities import MonthlyBook
 
 class MonthlyBookRepositoryPort(ABC):
     @abstractmethod

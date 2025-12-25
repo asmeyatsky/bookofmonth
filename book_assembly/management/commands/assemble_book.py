@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
 from datetime import datetime
 
-from backend.book_assembly.infrastructure.repositories.monthly_book_repository import DjangoMonthlyBookRepository
-from backend.book_assembly.domain.services.book_assembly_service import BookAssemblyService
-from backend.book_assembly.application.use_cases.assemble_book_use_case import AssembleBookUseCase
-from backend.content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
+from book_assembly.infrastructure.repositories.monthly_book_repository import DjangoMonthlyBookRepository
+from book_assembly.domain.services.book_assembly_service import BookAssemblyService
+from book_assembly.application.use_cases.assemble_book_use_case import AssembleBookUseCase
+from content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
 
 class Command(BaseCommand):
     help = 'Assembles a monthly book from processed news events.'

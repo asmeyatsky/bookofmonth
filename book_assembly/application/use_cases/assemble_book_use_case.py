@@ -1,5 +1,5 @@
-from backend.book_assembly.domain.services.book_assembly_service import BookAssemblyService
-from backend.book_assembly.domain.ports.repository_ports import MonthlyBookRepositoryPort
+from book_assembly.domain.services.book_assembly_service import BookAssemblyService
+from book_assembly.domain.ports.repository_ports import MonthlyBookRepositoryPort
 
 class AssembleBookUseCase:
     def __init__(

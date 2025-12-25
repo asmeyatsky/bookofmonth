@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from django.contrib.auth import authenticate
 from .models import CustomUser, Bookmark, ReadingProgress, ChildProfile, ReadingStreak, Achievement, UserAchievement
+from .services import AchievementService
 from .serializers import (
     UserSerializer, BookmarkSerializer, ReadingProgressSerializer,
     ChildProfileSerializer, ReadingStreakSerializer, AchievementSerializer,
@@ -206,7 +207,14 @@ class ReadingProgressViewSet(viewsets.ModelViewSet):
                 {'error': 'You can only update your own reading progress'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        return super().update(request, *args, **kwargs)
+        
+        response = super().update(request, *args, **kwargs)
+        
+        # If marked as complete, trigger achievement checks
+        if request.data.get('completed') and not instance.completed:
+            AchievementService.mark_content_complete(request.user, instance.news_event)
+        
+        return response
 
 
 class ChildProfileViewSet(viewsets.ModelViewSet):
@@ -246,6 +254,33 @@ class ReadingStreakViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user)
+    
+    @action(detail=False, methods=['post'])
+    def update_streak(self, request):
+        """Manually update reading streak for the user."""
+        streak = AchievementService.update_reading_streak(request.user)
+        serializer = self.get_serializer(streak)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def mark_content_complete(self, request):
+        """Mark content as complete and trigger achievement checks."""
+        news_event_id = request.data.get('news_event_id')
+        if not news_event_id:
+            return Response(
+                {'error': 'news_event_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            news_event = NewsEventModel.objects.get(id=news_event_id)
+            AchievementService.mark_content_complete(request.user, news_event)
+            return Response({'message': 'Content marked as complete'})
+        except NewsEventModel.DoesNotExist:
+            return Response(
+                {'error': 'News event not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class AchievementViewSet(viewsets.ReadOnlyModelViewSet):

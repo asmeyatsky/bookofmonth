@@ -1,9 +1,9 @@
 from typing import List, Optional
 import uuid
-from backend.book_assembly.domain.ports.repository_ports import MonthlyBookRepositoryPort
-from backend.book_assembly.domain.entities import MonthlyBook
-from backend.book_assembly.models import MonthlyBookModel
-from backend.content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
+from book_assembly.domain.ports.repository_ports import MonthlyBookRepositoryPort
+from book_assembly.domain.entities import MonthlyBook
+from book_assembly.models import MonthlyBookModel
+from content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
 
 class DjangoMonthlyBookRepository(MonthlyBookRepositoryPort):
     def __init__(self):

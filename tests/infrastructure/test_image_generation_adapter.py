@@ -2,7 +2,7 @@ import os
 import unittest
 import requests
 from unittest.mock import patch, MagicMock
-from backend.content_pipeline.infrastructure.adapters.image_generation_adapter import ImageGenerationAdapter
+from content_pipeline.infrastructure.adapters.image_generation_adapter import ImageGenerationAdapter
 
 class TestImageGenerationAdapter(unittest.TestCase):
 
