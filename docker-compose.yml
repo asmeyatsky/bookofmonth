@@ -5,31 +5,32 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-bookofmonth}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
-      POSTGRES_HOST_AUTH_METHOD: trust
+      # REQUIRED: Set these in your .env file - no defaults for security
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 30s
       timeout: 10s
       retries: 3
     restart: unless-stopped
 
-  # Redis Cache
+  # Redis Cache with Authentication
   redis:
     image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required} --appendonly yes
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,19 +42,22 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn --bind 0.0.0.0:8000 
-             --workers 3 
+             gunicorn --bind 0.0.0.0:8000
+             --workers 3
              --timeout 60
              --access-logfile -
              --error-logfile -
              bookofmonth_backend.wsgi:application"
     environment:
+      # REQUIRED: All secrets must be set in .env file
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@db:5432/${POSTGRES_DB:-bookofmonth}
-      - REDIS_URL=redis://redis:6379/0
-      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://yourdomain.com}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,yourdomain.com}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:?DJANGO_ALLOWED_HOSTS is required}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - ENVIRONMENT=production
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
@@ -77,9 +81,11 @@ services:
     command: celery -A bookofmonth_backend worker -l info --concurrency=2
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@db:5432/${POSTGRES_DB:-bookofmonth}
-      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - ENVIRONMENT=production
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -93,9 +99,11 @@ services:
     command: celery -A bookofmonth_backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres123}@db:5432/${POSTGRES_DB:-bookofmonth}
-      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - ENVIRONMENT=production
     volumes:
       - ./logs:/app/logs
     depends_on:

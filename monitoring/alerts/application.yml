@@ -1,0 +1,146 @@
+# Application-specific alerts
+groups:
+  - name: application
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]))
+          / sum(rate(django_http_responses_total_by_status_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High error rate detected
+          description: "Error rate is {{ $value | humanizePercentage }} (threshold: 5%)"
+
+      # Slow response times
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(django_http_requests_latency_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Slow response times
+          description: "95th percentile latency is {{ $value }}s (threshold: 2s)"
+
+      # Health check failing
+      - alert: HealthCheckFailing
+        expr: up{job="django"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Application health check failing
+          description: "Django application is not responding to health checks"
+
+      # High request rate (potential DDoS)
+      - alert: HighRequestRate
+        expr: sum(rate(django_http_requests_total[1m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Unusually high request rate
+          description: "Request rate is {{ $value }} requests/second"
+
+  - name: database
+    rules:
+      # Database connection pool exhaustion
+      - alert: DatabaseConnectionsHigh
+        expr: pg_stat_activity_count > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High database connection count
+          description: "Database has {{ $value }} active connections"
+
+      # Database replication lag
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag > 60
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Database replication lag
+          description: "Replication lag is {{ $value }} seconds"
+
+  - name: redis
+    rules:
+      # Redis memory usage high
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Redis memory usage high
+          description: "Redis memory usage is at {{ $value | humanizePercentage }}"
+
+      # Redis connection issues
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Redis is down
+          description: "Redis is not responding"
+
+  - name: celery
+    rules:
+      # Celery queue backlog
+      - alert: CeleryQueueBacklog
+        expr: celery_queue_length > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Celery queue backlog
+          description: "Celery queue has {{ $value }} pending tasks"
+
+      # Celery worker down
+      - alert: CeleryWorkerDown
+        expr: celery_workers < 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: No Celery workers available
+          description: "Celery has no active workers"
+
+  - name: infrastructure
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: High CPU usage
+          description: "CPU usage is {{ $value }}%"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High memory usage
+          description: "Memory usage is {{ $value }}%"
+
+      # Disk space low
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Low disk space
+          description: "Disk usage is {{ $value }}% on {{ $labels.mountpoint }}"

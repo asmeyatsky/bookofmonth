@@ -42,17 +42,55 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        from .account_lockout import (
+            is_account_locked, record_failed_attempt,
+            reset_failed_attempts, get_client_ip, get_remaining_attempts
+        )
+
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         username = serializer.validated_data['username']
         password = serializer.validated_data['password']
 
+        # Get client identifier (username or IP)
+        client_ip = get_client_ip(request)
+        lockout_key = f"{username}:{client_ip}"
+
+        # Check if account is locked
+        is_locked, remaining_seconds = is_account_locked(lockout_key)
+        if is_locked:
+            return Response(
+                {
+                    'error': 'Account temporarily locked due to too many failed attempts.',
+                    'locked_until_seconds': remaining_seconds,
+                    'message': f'Please try again in {remaining_seconds // 60} minutes.'
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS
+            )
+
         user = authenticate(username=username, password=password)
 
         if user is None:
+            # Record failed attempt
+            attempts, is_now_locked, lockout_seconds = record_failed_attempt(lockout_key)
+            remaining = get_remaining_attempts(lockout_key)
+
+            if is_now_locked:
+                return Response(
+                    {
+                        'error': 'Account locked due to too many failed attempts.',
+                        'locked_until_seconds': lockout_seconds,
+                        'message': f'Please try again in {lockout_seconds // 60} minutes.'
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
+
             return Response(
-                {'error': 'Invalid credentials'},
+                {
+                    'error': 'Invalid credentials',
+                    'remaining_attempts': remaining
+                },
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -61,6 +99,9 @@ class LoginView(APIView):
                 {'error': 'User account is disabled'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+        # Successful login - reset failed attempts
+        reset_failed_attempts(lockout_key)
 
         token, _ = Token.objects.get_or_create(user=user)
         return Response({

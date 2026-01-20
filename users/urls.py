@@ -6,6 +6,9 @@ from .views import (
     RegisterView, LoginView, LogoutView,
     PasswordResetRequestView, PasswordResetConfirmView, ChangePasswordView
 )
+from .mfa_views import (
+    MFAStatusView, MFASetupView, MFADisableView, MFAVerifyView, MFABackupCodesView
+)
 
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
@@ -24,4 +27,10 @@ urlpatterns = [
     path('password-reset/', PasswordResetRequestView.as_view(), name='password-reset'),
     path('password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
+    # MFA endpoints
+    path('mfa/status/', MFAStatusView.as_view(), name='mfa-status'),
+    path('mfa/setup/', MFASetupView.as_view(), name='mfa-setup'),
+    path('mfa/disable/', MFADisableView.as_view(), name='mfa-disable'),
+    path('mfa/verify/', MFAVerifyView.as_view(), name='mfa-verify'),
+    path('mfa/backup-codes/', MFABackupCodesView.as_view(), name='mfa-backup-codes'),
 ]

@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
+from .health import health_check, readiness_check, liveness_check
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -24,6 +25,10 @@ urlpatterns = [
     path('api/assembly/', include('book_assembly.urls')),
     path('api/users/', include('users.urls')),
     path('api/quizzes/', include('quizzes.urls')),
+    # Health check endpoints
+    path('api/health/', health_check, name='health-check'),
+    path('api/health/ready/', readiness_check, name='readiness-check'),
+    path('api/health/live/', liveness_check, name='liveness-check'),
 ]
 
 # API Documentation (only in development)
