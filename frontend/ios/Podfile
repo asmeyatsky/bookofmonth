@@ -22,6 +22,9 @@ target 'bookofmonth_frontend' do
     # An absolute path to your application root.
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
+  
+  # Fix Firebase modular headers issue
+  use_modular_headers!
 
   post_install do |installer|
     react_native_post_install(
