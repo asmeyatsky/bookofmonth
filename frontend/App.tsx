@@ -12,11 +12,13 @@ import ChildProfileListScreen from './src/screens/ChildProfileListScreen';
 import AddChildProfileScreen from './src/screens/AddChildProfileScreen';
 import EditChildProfileScreen from './src/screens/EditChildProfileScreen';
 import MonthlyBookListScreen from './src/screens/MonthlyBookListScreen';
+import MonthlyBookScreen from './src/screens/MonthlyBookScreen';
 import SearchScreen from './src/screens/SearchScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
 import ParentDashboardScreen from './src/screens/ParentDashboardScreen';
 import { notificationService } from './src/services/NotificationService';
+import { colors } from './src/theme';
 
 const Stack = createStackNavigator();
 
@@ -39,19 +41,37 @@ const AppNavigator = () => {
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }
 
     return (
-        <Stack.Navigator initialRouteName={isAuthenticated ? "Home" : "Login"}>
+        <Stack.Navigator
+            initialRouteName={isAuthenticated ? "Home" : "Login"}
+            screenOptions={{
+                headerStyle: {
+                    backgroundColor: colors.background.card,
+                },
+                headerTintColor: colors.text.primary,
+                headerTitleStyle: {
+                    fontWeight: '600',
+                },
+                cardStyle: {
+                    backgroundColor: colors.background.primary,
+                },
+            }}
+        >
             <Stack.Screen
                 name="Login"
                 component={LoginScreen}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{ headerShown: false }}
+            />
             <Stack.Screen name="Register" component={RegistrationScreen} />
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
             <Stack.Screen
@@ -73,6 +93,14 @@ const AppNavigator = () => {
                 name="MonthlyBookList"
                 component={MonthlyBookListScreen}
                 options={{ title: 'Monthly Books' }}
+            />
+            <Stack.Screen
+                name="MonthlyBook"
+                component={MonthlyBookScreen}
+                options={{
+                    title: 'Reading',
+                    headerShown: false,
+                }}
             />
             <Stack.Screen
                 name="Search"
@@ -98,10 +126,31 @@ const AppNavigator = () => {
     );
 };
 
+const linking = {
+    prefixes: ['http://localhost:3003'],
+    config: {
+        screens: {
+            Login: 'login',
+            Home: '',
+            Register: 'register',
+            Bookmarks: 'bookmarks',
+            ChildProfileList: 'child-profiles',
+            AddChildProfile: 'child-profiles/add',
+            EditChildProfile: 'child-profiles/edit',
+            MonthlyBookList: 'monthly-books',
+            MonthlyBook: 'monthly-books/:bookId',
+            Search: 'search',
+            Quiz: 'quiz',
+            Achievements: 'achievements',
+            ParentDashboard: 'parent-dashboard',
+        },
+    },
+};
+
 const App = () => {
     return (
         <AuthProvider>
-            <NavigationContainer>
+            <NavigationContainer linking={linking}>
                 <AppNavigator />
             </NavigationContainer>
         </AuthProvider>
@@ -113,6 +162,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: colors.background.primary,
     },
 });
 
