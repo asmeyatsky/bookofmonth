@@ -21,5 +21,9 @@ generated_images/
 # Expo
 frontend/.expo/
 
+# Build artifacts
+frontend/dist/
+.firebase/
+
 # Environment variables
 .env

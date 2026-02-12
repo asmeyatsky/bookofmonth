@@ -60,7 +60,7 @@ BRAVE_API_KEY=BRAVE_API_KEY:latest" \
         --set-env-vars="\
 ENVIRONMENT=production,\
 DJANGO_DEBUG=False,\
-DJANGO_ALLOWED_HOSTS=*.run.app,\
+DJANGO_ALLOWED_HOSTS=.run.app,\
 CORS_ALLOWED_ORIGINS=https://bookofmonth.web.app,\
 LOG_LEVEL=INFO"
 

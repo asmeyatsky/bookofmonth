@@ -1,11 +1,40 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { transformSync } from 'esbuild';
+
+// Transform JSX in .js files from node_modules that ship untranspiled JSX
+// (e.g. react-native-image-zoom-viewer, react-native-vector-icons)
+function jsxInNodeModules() {
+  return {
+    name: 'jsx-in-node-modules',
+    enforce: 'pre',
+    transform(code, id) {
+      if (
+        id.includes('node_modules') &&
+        id.endsWith('.js') &&
+        (code.includes('<') && /<[A-Za-z_]/.test(code))
+      ) {
+        try {
+          const result = transformSync(code, {
+            loader: 'jsx',
+            jsx: 'automatic',
+            target: 'es2020',
+          });
+          return { code: result.code, map: result.map || null };
+        } catch {
+          // Not actually JSX, let it pass through
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig({
   define: {
     global: 'globalThis',
   },
   plugins: [
+    jsxInNodeModules(),
     react({
       babel: {
         plugins: ['react-native-web'],
@@ -32,6 +61,11 @@ export default defineConfig({
         '.js': 'jsx',
       },
       resolveExtensions: ['.web.js', '.js', '.ts', '.tsx'],
+    },
+  },
+  build: {
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
   server: {
