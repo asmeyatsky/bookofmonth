@@ -84,11 +84,11 @@ const HomeScreen = () => {
                         setLongestStreak(streakArray[0].longest_streak || 0);
                     }
                 } catch (error) {
-                    console.error('Error fetching user data:', error);
+                    if (__DEV__) console.error('Error fetching user data:', error);
                 }
             }
         } catch (error) {
-            console.error('Error fetching news events:', error);
+            if (__DEV__) console.error('Error fetching news events:', error);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -143,7 +143,7 @@ const HomeScreen = () => {
                 setBookmarkedEvents(prev => new Set(prev).add(newsEventId));
             }
         } catch (error: any) {
-            console.error("Error toggling bookmark:", error);
+            if (__DEV__) console.error("Error toggling bookmark:", error);
             Alert.alert("Error", error.message || "Failed to toggle bookmark.");
         }
     };
@@ -190,7 +190,7 @@ const HomeScreen = () => {
                 }
             }
         } catch (error: any) {
-            console.error("Error marking as read:", error);
+            if (__DEV__) console.error("Error marking as read:", error);
             Alert.alert("Error", error.message || "Failed to update reading progress.");
         }
     };

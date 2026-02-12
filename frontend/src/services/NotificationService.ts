@@ -5,12 +5,12 @@ class NotificationService {
         PushNotification.configure({
             // (optional) Called when Token is generated (iOS and Android)
             onRegister: function (token: any) {
-                console.log("TOKEN:", token);
+                if (__DEV__) console.log("TOKEN:", token);
             },
 
             // (required) Called when a remote is received or opened, or local notification is served on iOS 10+ and Android
             onNotification: function (notification: any) {
-                console.log("NOTIFICATION:", notification);
+                if (__DEV__) console.log("NOTIFICATION:", notification);
                 // process the notification
 
                 // (required) Called when a remote is received or opened, or local notification is served
@@ -19,15 +19,15 @@ class NotificationService {
 
             // (optional) Called when Action is pressed (Android)
             onAction: function (notification: any) {
-                console.log("ACTION:", notification.action);
-                console.log("NOTIFICATION:", notification);
+                if (__DEV__) console.log("ACTION:", notification.action);
+                if (__DEV__) console.log("NOTIFICATION:", notification);
 
                 // process the action
             },
 
             // (optional) Called when the user fails to register for remote notifications. Typically occurs when APNS is having issues, or the device is a simulator. (iOS)
             onRegistrationError: function(err: any) {
-                console.error(err.message, err);
+                if (__DEV__) console.error(err.message, err);
             },
 
             // IOS ONLY (optional): default: all notifications are shown to the user
@@ -51,7 +51,7 @@ class NotificationService {
                 importance: 4, // (optional) default: 4. Int value of the Android notification importance:
                 vibrate: true, // (optional) default: true. Creates the default vibration pattern if true.
             },
-            (created) => console.log(`createChannel returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+            (created) => { if (__DEV__) console.log(`createChannel returned '${created}'`); } // (optional) callback returns whether the channel was created, false means it already existed.
         );
     }
 

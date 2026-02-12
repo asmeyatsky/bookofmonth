@@ -72,7 +72,7 @@ const AchievementsScreen = () => {
                 }
             });
         } catch (error: any) {
-            console.error("Error fetching achievements:", error);
+            if (__DEV__) console.error("Error fetching achievements:", error);
             Alert.alert("Error", error.message || "Failed to fetch achievements.");
         } finally {
             setLoading(false);

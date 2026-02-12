@@ -37,7 +37,7 @@ const MonthlyBookListScreen = () => {
             const data = await apiService.getMonthlyBooks(filters);
             setMonthlyBooks(data.results || data || []);
         } catch (error) {
-            console.error(error);
+            if (__DEV__) console.error(error);
             Alert.alert("Error", "Failed to fetch monthly books.");
         } finally {
             setLoading(false);

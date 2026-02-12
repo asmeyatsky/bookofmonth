@@ -28,7 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fallback-dev-key-change-in-production')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if ENVIRONMENT == 'production':
+        raise RuntimeError("DJANGO_SECRET_KEY must be set in production!")
+    SECRET_KEY = 'insecure-dev-key-DO-NOT-USE-IN-PRODUCTION'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('true', '1', 'yes')
@@ -123,15 +127,25 @@ else:
 
 # Caches
 # https://django-redis.readthedocs.io/en/latest/
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/1'),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+if ENVIRONMENT == 'production':
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1"),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
         }
     }
-}
+else:
+    # LocMemCache works for development - account lockout functions within a single process.
+    # For multi-process dev setups, configure Redis via REDIS_URL.
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "bookofmonth-dev-cache",
+        }
+    }
 
 
 # Password validation
@@ -176,8 +190,8 @@ STATIC_URL = 'static/'
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
 
-# Token expiration (30 days)
-TOKEN_EXPIRATION_DAYS = int(os.environ.get('TOKEN_EXPIRATION_DAYS', 30))
+# Token expiration (14 days default - shorter for children's app security)
+TOKEN_EXPIRATION_DAYS = int(os.environ.get('TOKEN_EXPIRATION_DAYS', 14))
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
@@ -205,13 +219,25 @@ REST_FRAMEWORK = {
 }
 
 # CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = False  # Never allow all origins; use explicit whitelist
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8081,http://localhost:19006').split(',')
+    for origin in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:8081,http://localhost:19006,http://localhost:3003').split(',')
     if origin.strip()
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -426,3 +452,7 @@ LOGGING = {
         },
     },
 }
+
+# Production safety check: fail fast if DEBUG is True in production
+if ENVIRONMENT == 'production' and DEBUG:
+    raise RuntimeError("DEBUG must not be True in production!")

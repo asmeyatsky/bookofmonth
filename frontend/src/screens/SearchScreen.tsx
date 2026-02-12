@@ -52,7 +52,7 @@ const SearchScreen = () => {
                 setSearchResults(data.results || data || []);
             }
         } catch (error) {
-            console.error("Search error:", error);
+            if (__DEV__) console.error("Search error:", error);
             Alert.alert("Error", "Failed to perform search.");
         } finally {
             setLoading(false);

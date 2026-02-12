@@ -2,7 +2,7 @@
 class DictionaryService {
     async getDefinition(word: string): Promise<string | null> {
         // Mock implementation: In a real app, this would call a dictionary API.
-        console.log(`Mock Dictionary Service: Getting definition for "${word}"`);
+        if (__DEV__) console.log(`Mock Dictionary Service: Getting definition for "${word}"`);
         const mockDefinitions: { [key: string]: string } = {
             "bioluminescent": "emitting light by natural physiological processes.",
             "archaeologists": "people who study human history and prehistory through the excavation of sites and the analysis of artifacts and other physical remains.",

@@ -92,7 +92,7 @@ const ParentDashboardScreen = () => {
             const stats = await Promise.all(statsPromises);
             setChildStats(stats);
         } catch (error: any) {
-            console.error("Error fetching parent dashboard data:", error);
+            if (__DEV__) console.error("Error fetching parent dashboard data:", error);
             Alert.alert("Error", error.message || "Failed to fetch dashboard data.");
         } finally {
             setLoading(false);

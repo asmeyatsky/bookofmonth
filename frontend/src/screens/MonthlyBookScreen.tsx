@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService } from '../services/ApiService';
 import { ttsService } from '../services/TtsService';
 import { useAuth } from '../context/AuthContext';
+import ImageGallery from '../components/ImageGallery';
 import TappableText from '../components/TappableText';
 import CategoryBadge from '../components/CategoryBadge';
 import ReadingProgressBar from '../components/ReadingProgressBar';
@@ -29,7 +30,7 @@ interface DailyEntry {
     id: string;
     date: string;
     title: string;
-    content: string;
+    content_elements?: { type: string, payload: any }[];
     image_url?: string;
     category?: string;
     extracted_facts?: string[];
@@ -94,7 +95,7 @@ const MonthlyBookScreen = () => {
             const data = await apiService.getMonthlyBook(bookId);
             setBook(data);
         } catch (error: any) {
-            console.error('Error loading book:', error);
+            if (__DEV__) console.error('Error loading book:', error);
             Alert.alert('Error', error.message || 'Failed to load book');
         } finally {
             setLoading(false);
@@ -263,6 +264,17 @@ const MonthlyBookScreen = () => {
     );
 
     // Render Entry Page
+    const renderContentElement = (element: { type: string, payload: any }, index: number) => {
+        switch (element.type) {
+            case 'paragraph':
+                return <TappableText key={index} content={element.payload.text} />;
+            case 'image_gallery':
+                return <ImageGallery key={index} images={element.payload.images} />;
+            default:
+                return null;
+        }
+    };
+
     const renderEntryPage = (entry: DailyEntry, index: number) => (
         <Animated.ScrollView
             style={[styles.pageContainer, { opacity: fadeAnim }]}
@@ -275,13 +287,7 @@ const MonthlyBookScreen = () => {
 
             <Text style={[styles.entryTitle, { fontSize: typography.title }]}>{entry.title}</Text>
 
-            {entry.image_url && (
-                <Image source={{ uri: entry.image_url }} style={styles.entryImage} />
-            )}
-
-            <View style={styles.entryContent}>
-                <TappableText content={entry.content} />
-            </View>
+            {entry.content_elements?.map(renderContentElement)}
 
             {/* Did You Know? */}
             {entry.extracted_facts && entry.extracted_facts.length > 0 && (
@@ -320,7 +326,15 @@ const MonthlyBookScreen = () => {
             {/* Read Aloud Button */}
             <TouchableOpacity
                 style={styles.readAloudButton}
-                onPress={() => ttsService.speak(entry.content)}
+                onPress={() => {
+                    const textToSpeak = entry.content_elements
+                        ?.filter(e => e.type === 'paragraph')
+                        .map(e => e.payload.text)
+                        .join(' ');
+                    if (textToSpeak) {
+                        ttsService.speak(textToSpeak);
+                    }
+                }}
             >
                 <Icon name="volume-up" size={18} color={colors.text.inverse} />
                 <Text style={styles.readAloudText}>Read Aloud</Text>

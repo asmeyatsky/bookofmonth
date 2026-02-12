@@ -1,6 +1,5 @@
 import { authService } from './AuthService';
-
-const API_BASE_URL = 'http://127.0.0.1:8002/api';
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../config';
 
 interface RequestOptions {
     method?: string;
@@ -44,18 +43,28 @@ class ApiService {
             config.body = JSON.stringify(body);
         }
 
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.detail || `Request failed with status ${response.status}`);
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...config,
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || errorData.detail || `Request failed with status ${response.status}`);
+            }
+
+            if (response.status === 204) {
+                return {} as T;
+            }
+
+            return response.json();
+        } finally {
+            clearTimeout(timeoutId);
         }
-
-        if (response.status === 204) {
-            return {} as T;
-        }
-
-        return response.json();
     }
 
     // Build query string from filters

@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
+from rest_framework.throttling import AnonRateThrottle
 from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
@@ -18,6 +19,12 @@ from .serializers import (
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
 )
 from content_pipeline.models import NewsEventModel
+
+
+class PasswordResetThrottle(AnonRateThrottle):
+    """Limit password reset requests to 3 per hour per IP."""
+    rate = '3/hour'
+    scope = 'password_reset'
 
 
 class RegisterView(generics.CreateAPIView):
@@ -349,6 +356,7 @@ class UserAchievementViewSet(viewsets.ReadOnlyModelViewSet):
 class PasswordResetRequestView(APIView):
     """Request a password reset email."""
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [PasswordResetThrottle]
 
     def post(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)

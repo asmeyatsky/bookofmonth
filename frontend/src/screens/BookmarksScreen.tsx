@@ -29,7 +29,7 @@ const BookmarksScreen = () => {
                 setBookmarkedNews(newsEvents);
             }
         } catch (error: any) {
-            console.error("Error fetching bookmarks:", error);
+            if (__DEV__) console.error("Error fetching bookmarks:", error);
             Alert.alert("Error", error.message || "Failed to fetch bookmarks.");
         } finally {
             setLoading(false);
@@ -60,7 +60,7 @@ const BookmarksScreen = () => {
             Alert.alert("Success", "Bookmark removed successfully.");
             setBookmarkedNews(prev => prev.filter(item => item.bookmark_id !== bookmarkId));
         } catch (error: any) {
-            console.error("Error removing bookmark:", error);
+            if (__DEV__) console.error("Error removing bookmark:", error);
             Alert.alert("Error", error.message || "Failed to remove bookmark.");
         }
     };

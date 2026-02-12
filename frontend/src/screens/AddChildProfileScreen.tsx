@@ -53,7 +53,7 @@ const AddChildProfileScreen = () => {
             Alert.alert("Success", "Child profile added successfully.");
             navigation.goBack();
         } catch (error: any) {
-            console.error("Error adding child profile:", error);
+            if (__DEV__) console.error("Error adding child profile:", error);
             Alert.alert("Error", error.message || "Failed to add child profile.");
         } finally {
             setLoading(false);

@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 await loadChildProfiles();
             }
         } catch (error) {
-            console.error('Error initializing auth:', error);
+            if (__DEV__) console.error('Error initializing auth:', error);
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +90,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 await AsyncStorage.setItem(ACTIVE_PROFILE_KEY, profiles[0].id.toString());
             }
         } catch (error) {
-            console.error('Error loading child profiles:', error);
+            if (__DEV__) console.error('Error loading child profiles:', error);
         }
     };
 

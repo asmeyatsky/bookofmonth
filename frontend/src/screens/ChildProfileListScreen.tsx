@@ -25,7 +25,7 @@ const ChildProfileListScreen = () => {
                 setChildProfiles(data);
             }
         } catch (error: any) {
-            console.error("Error fetching child profiles:", error);
+            if (__DEV__) console.error("Error fetching child profiles:", error);
             Alert.alert("Error", error.message || "Failed to fetch child profiles.");
         } finally {
             setLoading(false);
@@ -64,7 +64,7 @@ const ChildProfileListScreen = () => {
                             Alert.alert("Success", "Child profile deleted successfully.");
                             setChildProfiles(prev => prev.filter(p => p.id !== profileId));
                         } catch (error: any) {
-                            console.error("Error deleting child profile:", error);
+                            if (__DEV__) console.error("Error deleting child profile:", error);
                             Alert.alert("Error", error.message || "Failed to delete profile.");
                         }
                     },

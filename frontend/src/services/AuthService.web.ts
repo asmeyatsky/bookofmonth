@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH_API_URL, REQUEST_TIMEOUT_MS } from '../config';
 
 const TOKEN_KEY = '@auth_token';
@@ -47,10 +46,8 @@ class AuthService {
 
     async initialize(): Promise<boolean> {
         try {
-            const [storedToken, storedUser] = await Promise.all([
-                AsyncStorage.getItem(TOKEN_KEY),
-                AsyncStorage.getItem(USER_KEY),
-            ]);
+            const storedToken = localStorage.getItem(TOKEN_KEY);
+            const storedUser = localStorage.getItem(USER_KEY);
 
             if (storedToken && storedUser) {
                 this.token = storedToken;
@@ -128,7 +125,7 @@ class AuthService {
             if (response.ok) {
                 const user: User = await response.json();
                 this.user = user;
-                await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+                localStorage.setItem(USER_KEY, JSON.stringify(user));
                 return user;
             }
         } catch (error) {
@@ -140,19 +137,15 @@ class AuthService {
     private async setAuthData(data: AuthResponse): Promise<void> {
         this.token = data.token;
         this.user = data.user;
-        await Promise.all([
-            AsyncStorage.setItem(TOKEN_KEY, data.token),
-            AsyncStorage.setItem(USER_KEY, JSON.stringify(data.user)),
-        ]);
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
     }
 
     private async clearAuthData(): Promise<void> {
         this.token = null;
         this.user = null;
-        await Promise.all([
-            AsyncStorage.removeItem(TOKEN_KEY),
-            AsyncStorage.removeItem(USER_KEY),
-        ]);
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
     }
 
     getToken(): string | null {

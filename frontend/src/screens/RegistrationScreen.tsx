@@ -35,7 +35,7 @@ const RegistrationScreen = () => {
             Alert.alert('Success', 'Registration successful!');
             navigation.navigate('Home' as never);
         } catch (error: any) {
-            console.error(error);
+            if (__DEV__) console.error(error);
             Alert.alert('Error', error.message || 'Registration failed');
         } finally {
             setLoading(false);

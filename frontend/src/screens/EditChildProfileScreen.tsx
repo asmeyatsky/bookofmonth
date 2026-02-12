@@ -56,7 +56,7 @@ const EditChildProfileScreen = () => {
             Alert.alert("Success", "Child profile updated successfully.");
             navigation.goBack();
         } catch (error: any) {
-            console.error("Error updating child profile:", error);
+            if (__DEV__) console.error("Error updating child profile:", error);
             Alert.alert("Error", error.message || "Failed to update child profile.");
         } finally {
             setLoading(false);

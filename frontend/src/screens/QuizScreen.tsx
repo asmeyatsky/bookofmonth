@@ -8,7 +8,6 @@ interface Question {
     id: string;
     text: string;
     options: string[];
-    correct_answer: string;
 }
 
 interface Quiz {
@@ -17,28 +16,43 @@ interface Quiz {
     questions: Question[];
 }
 
+interface AnswerResult {
+    question: string;
+    question_text: string;
+    selected_answer: string;
+    is_correct: boolean;
+    correct_answer: string;
+}
+
+interface SubmissionResult {
+    score: number;
+    total_questions: number;
+    answers: AnswerResult[];
+}
+
 const QuizScreen = () => {
     const [quiz, setQuiz] = useState<Quiz | null>(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [selectedAnswers, setSelectedAnswers] = useState<{ [key: string]: string }>({});
     const [showResults, setShowResults] = useState(false);
-    const [submissionResult, setSubmissionResult] = useState<{ score: number; total: number } | null>(null);
+    const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
     const navigation = useNavigation();
     const route = useRoute();
     const { bookId } = route.params as { bookId: string };
 
     useEffect(() => {
-        fetch(`http://localhost:8000/api/quizzes/quizzes/?monthly_book=${bookId}`)
-            .then(response => response.json())
+        apiService.getQuizzes()
             .then(data => {
-                if (data.results && data.results.length > 0) {
-                    setQuiz(data.results[0]);
+                const quizzes = data.results || data || [];
+                const matchingQuiz = quizzes.find((q: any) => q.monthly_book === bookId || q.monthly_book?.id === bookId);
+                if (matchingQuiz) {
+                    setQuiz(matchingQuiz);
                 }
                 setLoading(false);
             })
             .catch(error => {
-                console.error("Error fetching quiz:", error);
+                if (__DEV__) console.error("Error fetching quiz:", error);
                 setLoading(false);
                 Alert.alert("Error", "Failed to fetch quiz.");
             });
@@ -49,6 +63,12 @@ const QuizScreen = () => {
             ...prev,
             [questionId]: answer,
         }));
+    };
+
+    const getCorrectAnswer = (questionId: string): string | undefined => {
+        if (!submissionResult) return undefined;
+        const answer = submissionResult.answers.find(a => String(a.question) === String(questionId));
+        return answer?.correct_answer;
     };
 
     const handleSubmitQuiz = async () => {
@@ -65,33 +85,26 @@ const QuizScreen = () => {
                 }));
 
                 const result = await apiService.submitQuiz(quiz.id, answers);
-                setSubmissionResult({
-                    score: result.score,
-                    total: result.total_questions,
-                });
+                setSubmissionResult(result);
             } catch (error: any) {
                 if (error.message.includes('already submitted')) {
                     Alert.alert("Already Submitted", "You have already completed this quiz.");
                 } else {
-                    console.error("Error submitting quiz:", error);
+                    if (__DEV__) console.error("Error submitting quiz:", error);
+                    Alert.alert("Error", "Failed to submit quiz. Please try again.");
                 }
             } finally {
                 setSubmitting(false);
             }
+        } else {
+            Alert.alert(
+                "Login Required",
+                "Please log in to submit your quiz and see results."
+            );
+            return;
         }
 
         setShowResults(true);
-    };
-
-    const calculateScore = () => {
-        if (!quiz || !quiz.questions) return 0;
-        let score = 0;
-        quiz.questions.forEach((question: Question) => {
-            if (selectedAnswers[question.id] === question.correct_answer) {
-                score++;
-            }
-        });
-        return score;
     };
 
     if (loading) {
@@ -106,8 +119,8 @@ const QuizScreen = () => {
         );
     }
 
-    const displayScore = submissionResult ? submissionResult.score : calculateScore();
-    const displayTotal = submissionResult ? submissionResult.total : quiz.questions.length;
+    const displayScore = submissionResult?.score ?? 0;
+    const displayTotal = submissionResult?.total_questions ?? quiz.questions.length;
 
     return (
         <View style={styles.container}>
@@ -115,25 +128,28 @@ const QuizScreen = () => {
             <FlatList
                 data={quiz.questions}
                 keyExtractor={(item: Question) => item.id.toString()}
-                renderItem={({ item: question }) => (
-                    <View style={styles.questionContainer}>
-                        <Text style={styles.questionText}>{question.text}</Text>
-                        {question.options.map((option: string, index: number) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[
-                                    styles.optionButton,
-                                    selectedAnswers[question.id] === option && styles.selectedOption,
-                                    showResults && option === question.correct_answer && styles.correctOption,
-                                    showResults && selectedAnswers[question.id] === option && option !== question.correct_answer && styles.incorrectOption,
-                                ]}
-                                onPress={() => !showResults && handleAnswerSelection(question.id, option)}
-                            >
-                                <Text style={styles.optionText}>{option}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
+                renderItem={({ item: question }) => {
+                    const correctAnswer = getCorrectAnswer(question.id);
+                    return (
+                        <View style={styles.questionContainer}>
+                            <Text style={styles.questionText}>{question.text}</Text>
+                            {question.options.map((option: string, index: number) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={[
+                                        styles.optionButton,
+                                        selectedAnswers[question.id] === option && styles.selectedOption,
+                                        showResults && correctAnswer && option === correctAnswer && styles.correctOption,
+                                        showResults && correctAnswer && selectedAnswers[question.id] === option && option !== correctAnswer && styles.incorrectOption,
+                                    ]}
+                                    onPress={() => !showResults && handleAnswerSelection(question.id, option)}
+                                >
+                                    <Text style={styles.optionText}>{option}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    );
+                }}
             />
             {!showResults ? (
                 <Button
