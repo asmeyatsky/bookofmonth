@@ -196,11 +196,26 @@ class MonthlyBookSerializerTestCase(TestCase):
         """Test that serializer contains all expected fields."""
         from book_assembly.models import MonthlyBookModel
         from book_assembly.serializers import MonthlyBookSerializer
+        from content_pipeline.models import NewsEventModel
+
+        # Create real NewsEventModel instances so the serializer can resolve daily_entries
+        event1 = NewsEventModel.objects.create(
+            title='Event 1',
+            raw_content='Content 1',
+            source_url='https://example.com/1',
+            published_at=datetime.now()
+        )
+        event2 = NewsEventModel.objects.create(
+            title='Event 2',
+            raw_content='Content 2',
+            source_url='https://example.com/2',
+            published_at=datetime.now()
+        )
 
         book = MonthlyBookModel.objects.create(
             month=5, year=2024, title='May 2024',
             cover_image_url='https://example.com/may.jpg',
-            daily_entries=['entry1', 'entry2'],
+            daily_entries=[str(event1.id), str(event2.id)],
             end_of_month_quiz=[{'q': 'Question?'}],
             parents_guide='May guide'
         )
