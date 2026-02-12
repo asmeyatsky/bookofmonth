@@ -13,14 +13,14 @@ exclude =
 
 # Ignore some errors that conflict with Black formatter
 ignore =
-    E203,  # whitespace before ':'
-    E266,  # too many leading '#' for block comment
-    E501,  # line too long (handled by Black)
-    W503,  # line break before binary operator
-    E722,  # do not use bare 'except'
+    E203,
+    E266,
+    E501,
+    W503,
+    E722
 
 per-file-ignores =
-    __init__.py:F401  # imported but unused
-    */tests/*.py:S101  # use of assert
+    __init__.py:F401
+    */tests/*.py:S101
 
 max-complexity = 10
