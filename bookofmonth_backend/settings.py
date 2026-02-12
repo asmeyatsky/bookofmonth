@@ -53,12 +53,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_redis',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
     'corsheaders',
-    'django_celery_beat',
+    'django_q',
     'django_otp',
     'django_otp.plugins.otp_totp',
     'content_pipeline',
@@ -69,6 +68,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -102,22 +102,31 @@ WSGI_APPLICATION = 'bookofmonth_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-if ENVIRONMENT == 'production':
-    # PostgreSQL for production
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+if DATABASE_URL and not DATABASE_URL.startswith('sqlite'):
+    # PostgreSQL (Neon or other) via dj-database-url
     import dj_database_url
-    
+
     DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.parse(DATABASE_URL)
     }
-    
-    # Connection pool settings for production
-    DATABASES['default']['CONN_MAX_AGE'] = 60
-    DATABASES['default']['OPTIONS'] = {
-        'MAX_CONNS': 20,
-        'MIN_CONNS': 5,
-    }
+
+    # Neon uses PgBouncer for connection pooling - disable server-side cursors
+    DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+
+    # Health checks reconnect on stale/broken connections (important for Neon auto-suspend)
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+
+    # Don't persist connections when using external pooler
+    DATABASES['default']['CONN_MAX_AGE'] = 0
+
+    # Ensure SSL for Neon
+    if 'OPTIONS' not in DATABASES['default']:
+        DATABASES['default']['OPTIONS'] = {}
+    DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
-    # SQLite for development
+    # SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -125,27 +134,14 @@ else:
         }
     }
 
-# Caches
-# https://django-redis.readthedocs.io/en/latest/
-if ENVIRONMENT == 'production':
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/1"),
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
-        }
+# Cache - uses Django's database-backed cache (no Redis needed)
+# Requires: python manage.py createcachetable
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache_table",
     }
-else:
-    # LocMemCache works for development - account lockout functions within a single process.
-    # For multi-process dev setups, configure Redis via REDIS_URL.
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "bookofmonth-dev-cache",
-        }
-    }
+}
 
 
 # Password validation
@@ -186,6 +182,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -273,30 +270,19 @@ if 'drf_yasg' in INSTALLED_APPS:
         'DOC_EXPANSION': 'none',
     }
 
-# Celery Configuration
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://127.0.0.1:6379/0')
-CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://127.0.0.1:6379/0')
-
-# Celery Beat Schedule - Periodic Tasks
-from celery.schedules import crontab
-
-CELERY_BEAT_SCHEDULE = {
-    'process-daily-content': {
-        'task': 'users.tasks.process_daily_content',
-        'schedule': crontab(hour=6, minute=0),  # Run at 6 AM UTC daily
-    },
-    'send-reading-reminders': {
-        'task': 'users.tasks.send_reading_reminder',
-        'schedule': crontab(hour=18, minute=0),  # Run at 6 PM UTC daily
-    },
-    'cleanup-old-sessions': {
-        'task': 'users.tasks.cleanup_old_sessions',
-        'schedule': crontab(hour=3, minute=0, day_of_week=0),  # Run at 3 AM UTC on Sundays
-    },
-    'generate-monthly-book': {
-        'task': 'users.tasks.generate_monthly_book',
-        'schedule': crontab(hour=0, minute=0, day_of_month=1),  # Run at midnight on 1st of each month
-        'kwargs': {'year': None, 'month': None},  # Will be determined dynamically in task
+# Django Q2 Configuration - uses PostgreSQL ORM as broker (no Redis needed)
+Q_CLUSTER = {
+    'name': 'bookofmonth',
+    'workers': int(os.environ.get('Q_CLUSTER_WORKERS', 2)),
+    'timeout': 300,       # Task timeout in seconds
+    'retry': 360,         # Retry timeout (must be > timeout)
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',     # Use Django ORM (PostgreSQL) as broker
+    'catch_up': False,    # Don't run missed schedules on startup
+    'label': 'Background Tasks',
+    'error_reporter': {
+        'sentry': True,
     },
 }
 
@@ -318,15 +304,11 @@ SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
 if SENTRY_DSN and ENVIRONMENT == 'production':
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.celery import CeleryIntegration
-    from sentry_sdk.integrations.redis import RedisIntegration
 
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[
             DjangoIntegration(),
-            CeleryIntegration(),
-            RedisIntegration(),
         ],
         traces_sample_rate=0.1,  # 10% of transactions for performance monitoring
         send_default_pii=False,  # Don't send personally identifiable information
@@ -344,6 +326,9 @@ CSP_FONT_SRC = ("'self'",)
 CSP_CONNECT_SRC = ("'self'",)
 CSP_FRAME_ANCESTORS = ("'none'",)
 CSP_FORM_ACTION = ("'self'",)
+
+# Trust Cloud Run's forwarded proto header
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Additional security headers for production
 if not DEBUG:
@@ -425,7 +410,7 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
-        'celery': {
+        'django_q': {
             'handlers': ['console'],
             'level': LOG_LEVEL,
             'propagate': False,

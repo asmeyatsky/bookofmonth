@@ -29,12 +29,17 @@ RUN mkdir -p /app/staticfiles
 # Collect static files
 RUN python manage.py collectstatic --noinput --clear
 
-# Expose port
-EXPOSE 8000
+# Cloud Run provides $PORT (default 8080)
+ENV PORT=8080
+EXPOSE ${PORT}
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/api/health/ || exit 1
-
-# Run migrations and start server
-CMD ["sh", "-c", "python manage.py migrate && gunicorn --bind 0.0.0.0:8000 bookofmonth_backend.wsgi:application"]
+# Run migrations, create cache table, and start server
+CMD sh -c "python manage.py migrate --noinput && \
+    python manage.py createcachetable --database default 2>/dev/null; \
+    gunicorn bookofmonth_backend.wsgi:application \
+        --bind 0.0.0.0:${PORT} \
+        --workers 2 \
+        --threads 2 \
+        --timeout 120 \
+        --access-logfile - \
+        --error-logfile -"

@@ -18,5 +18,8 @@ generated_images/
 .idea/
 .vscode/
 
+# Expo
+frontend/.expo/
+
 # Environment variables
 .env

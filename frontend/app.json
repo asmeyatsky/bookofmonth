@@ -1,4 +1,12 @@
 {
   "name": "bookofmonth_frontend",
-  "displayName": "bookofmonth_frontend"
+  "displayName": "bookofmonth_frontend",
+  "expo": {
+    "name": "Book of the Month",
+    "slug": "bookofmonth",
+    "platforms": ["web"],
+    "web": {
+      "bundler": "webpack"
+    }
+  }
 }
