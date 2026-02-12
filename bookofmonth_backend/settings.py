@@ -121,10 +121,11 @@ if DATABASE_URL and not DATABASE_URL.startswith('sqlite'):
     # Don't persist connections when using external pooler
     DATABASES['default']['CONN_MAX_AGE'] = 0
 
-    # Ensure SSL for Neon
-    if 'OPTIONS' not in DATABASES['default']:
-        DATABASES['default']['OPTIONS'] = {}
-    DATABASES['default']['OPTIONS']['sslmode'] = 'require'
+    # Ensure SSL for Neon (skip in CI/test where local Postgres has no SSL)
+    if os.environ.get('ENVIRONMENT') != 'test':
+        if 'OPTIONS' not in DATABASES['default']:
+            DATABASES['default']['OPTIONS'] = {}
+        DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
     # SQLite for local development
     DATABASES = {
