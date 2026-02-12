@@ -22,6 +22,8 @@ const MonthlyBookListScreen = () => {
     const [monthlyBooks, setMonthlyBooks] = useState<MonthlyBook[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [nextPageUrl, setNextPageUrl] = useState<string | null>(null);
     const navigation = useNavigation();
     const { activeChildProfile } = useAuth();
 
@@ -35,13 +37,36 @@ const MonthlyBookListScreen = () => {
                 ? { readingLevel: activeChildProfile.reading_level }
                 : undefined;
             const data = await apiService.getMonthlyBooks(filters);
-            setMonthlyBooks(data.results || data || []);
+            if (data.results) {
+                setMonthlyBooks(data.results);
+                setNextPageUrl(data.next || null);
+            } else {
+                setMonthlyBooks(Array.isArray(data) ? data : []);
+                setNextPageUrl(null);
+            }
         } catch (error) {
             if (__DEV__) console.error(error);
             Alert.alert("Error", "Failed to fetch monthly books.");
         } finally {
             setLoading(false);
             setRefreshing(false);
+        }
+    };
+
+    const loadMore = async () => {
+        if (!nextPageUrl || loadingMore) return;
+        setLoadingMore(true);
+        try {
+            const response = await fetch(nextPageUrl);
+            const data = await response.json();
+            if (data.results) {
+                setMonthlyBooks(prev => [...prev, ...data.results]);
+                setNextPageUrl(data.next || null);
+            }
+        } catch (error) {
+            if (__DEV__) console.error(error);
+        } finally {
+            setLoadingMore(false);
         }
     };
 
@@ -183,6 +208,11 @@ const MonthlyBookListScreen = () => {
                             tintColor={colors.primary}
                         />
                     }
+                    onEndReached={loadMore}
+                    onEndReachedThreshold={0.5}
+                    ListFooterComponent={loadingMore ? (
+                        <ActivityIndicator style={{ padding: spacing.md }} size="small" color={colors.primary} />
+                    ) : null}
                 />
             )}
         </View>

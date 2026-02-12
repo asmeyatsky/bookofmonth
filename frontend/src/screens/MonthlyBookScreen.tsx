@@ -92,7 +92,7 @@ const MonthlyBookScreen = () => {
 
     const loadBook = async () => {
         try {
-            const data = await apiService.getMonthlyBook(bookId);
+            const data = await apiService.getMonthlyBookWithEntries(bookId);
             setBook(data);
         } catch (error: any) {
             if (__DEV__) console.error('Error loading book:', error);
