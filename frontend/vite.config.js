@@ -17,7 +17,7 @@ function jsxInNodeModules() {
         try {
           const result = transformSync(code, {
             loader: 'jsx',
-            jsx: 'automatic',
+            jsx: 'transform',
             target: 'es2020',
           });
           return { code: result.code, map: result.map || null };
@@ -32,6 +32,7 @@ function jsxInNodeModules() {
 export default defineConfig({
   define: {
     global: 'globalThis',
+    __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
   },
   plugins: [
     jsxInNodeModules(),
