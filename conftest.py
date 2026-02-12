@@ -5,11 +5,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bookofmonth_backend.settings')
 
 
 @pytest.fixture(scope='session')
-def django_db_setup():
-    import django
+def django_db_modify_db_settings():
     from django.conf import settings
 
-    # Use SQLite for tests
+    # Use SQLite for tests (fast, no external DB needed)
     settings.DATABASES['default'] = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
@@ -22,10 +21,6 @@ def django_db_setup():
             'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
         }
     }
-
-    django.setup()
-    from django.core.management import call_command
-    call_command('migrate', '--run-syncdb', verbosity=0)
 
 
 @pytest.fixture(autouse=True)
