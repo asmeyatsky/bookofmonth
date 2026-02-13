@@ -356,6 +356,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
+        ...(Platform.OS === 'web' && { paddingBottom: 60 }), // Account for tab bar height on web
     },
     loadingContainer: {
         flex: 1,

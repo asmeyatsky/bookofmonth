@@ -32,14 +32,16 @@ const Tab = createBottomTabNavigator();
 
 const MainTabs = () => {
     return (
-        <Tab.Navigator
-            screenOptions={{
-                tabBarActiveTintColor: colors.primary,
-                tabBarInactiveTintColor: colors.text.secondary,
-                tabBarStyle: {
-                    backgroundColor: colors.background.card,
-                    borderTopColor: colors.background.secondary,
-                },
+        <View style={{ flex: 1, height: '100%' }}>
+            <Tab.Navigator
+                screenOptions={{
+                    tabBarActiveTintColor: colors.primary,
+                    tabBarInactiveTintColor: colors.text.secondary,
+                    tabBarStyle: {
+                        backgroundColor: colors.background.card,
+                        borderTopColor: colors.background.secondary,
+                        height: 60, // Set a fixed height for consistency
+                    },
                 headerStyle: {
                     backgroundColor: colors.background.card,
                 },
@@ -48,6 +50,7 @@ const MainTabs = () => {
                     fontWeight: '600',
                 },
             }}
+            tabBarHideOnKeyboard={true} // Hide tab bar when keyboard is open
         >
             <Tab.Screen
                 name="Home"
