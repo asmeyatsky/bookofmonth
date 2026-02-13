@@ -126,8 +126,15 @@ const AppNavigator = () => {
     );
 };
 
+const getPrefix = () => {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+        return window.location.origin;
+    }
+    return 'http://localhost:3003';
+};
+
 const linking = {
-    prefixes: ['http://localhost:3003'],
+    prefixes: [getPrefix()],
     config: {
         screens: {
             Login: 'login',
