@@ -1,10 +1,12 @@
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import HomeScreen from './src/screens/HomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegistrationScreen from './src/screens/RegistrationScreen';
@@ -20,7 +22,86 @@ import AchievementsScreen from './src/screens/AchievementsScreen';
 import ParentDashboardScreen from './src/screens/ParentDashboardScreen';
 import { colors } from './src/theme';
 
+// Conditionally use GestureHandlerRootView only on native
+const RootView = Platform.OS === 'web'
+    ? ({ style, children }: { style: any; children: React.ReactNode }) => <View style={style}>{children}</View>
+    : require('react-native-gesture-handler').GestureHandlerRootView;
+
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+const MainTabs = () => {
+    return (
+        <Tab.Navigator
+            screenOptions={{
+                tabBarActiveTintColor: colors.primary,
+                tabBarInactiveTintColor: colors.text.secondary,
+                tabBarStyle: {
+                    backgroundColor: colors.background.card,
+                    borderTopColor: colors.background.secondary,
+                },
+                headerStyle: {
+                    backgroundColor: colors.background.card,
+                },
+                headerTintColor: colors.text.primary,
+                headerTitleStyle: {
+                    fontWeight: '600',
+                },
+            }}
+        >
+            <Tab.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{
+                    headerShown: false,
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="home" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Bookmarks"
+                component={BookmarksScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="bookmark" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="MonthlyBookList"
+                component={MonthlyBookListScreen}
+                options={{
+                    title: 'Books',
+                    tabBarLabel: 'Books',
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="book" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Search"
+                component={SearchScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="search" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Achievements"
+                component={AchievementsScreen}
+                options={{
+                    title: 'Awards',
+                    tabBarLabel: 'Awards',
+                    tabBarIcon: ({ color, size }) => (
+                        <Icon name="trophy" size={size} color={color} />
+                    ),
+                }}
+            />
+        </Tab.Navigator>
+    );
+};
 
 const AppNavigator = () => {
     const { isLoading, isAuthenticated } = useAuth();
@@ -55,7 +136,7 @@ const AppNavigator = () => {
 
     return (
         <Stack.Navigator
-            initialRouteName={isAuthenticated ? "Home" : "Login"}
+            initialRouteName={isAuthenticated ? "MainTabs" : "Login"}
             screenOptions={{
                 headerStyle: {
                     backgroundColor: colors.background.card,
@@ -75,13 +156,30 @@ const AppNavigator = () => {
                 component={LoginScreen}
                 options={{ headerShown: false }}
             />
+            <Stack.Screen name="Register" component={RegistrationScreen} />
             <Stack.Screen
-                name="Home"
-                component={HomeScreen}
+                name="MainTabs"
+                component={MainTabs}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen name="Register" component={RegistrationScreen} />
-            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
+            <Stack.Screen
+                name="ParentDashboard"
+                component={ParentDashboardScreen}
+                options={{ title: 'Parent Dashboard' }}
+            />
+            <Stack.Screen
+                name="MonthlyBook"
+                component={MonthlyBookScreen}
+                options={{
+                    title: 'Reading',
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
+                name="Quiz"
+                component={QuizScreen}
+                options={{ title: 'Quiz' }}
+            />
             <Stack.Screen
                 name="ChildProfileList"
                 component={ChildProfileListScreen}
@@ -97,52 +195,21 @@ const AppNavigator = () => {
                 component={EditChildProfileScreen}
                 options={{ title: 'Edit Child Profile' }}
             />
-            <Stack.Screen
-                name="MonthlyBookList"
-                component={MonthlyBookListScreen}
-                options={{ title: 'Monthly Books' }}
-            />
-            <Stack.Screen
-                name="MonthlyBook"
-                component={MonthlyBookScreen}
-                options={{
-                    title: 'Reading',
-                    headerShown: false,
-                }}
-            />
-            <Stack.Screen
-                name="Search"
-                component={SearchScreen}
-                options={{ title: 'Search' }}
-            />
-            <Stack.Screen
-                name="Quiz"
-                component={QuizScreen}
-                options={{ title: 'Quiz' }}
-            />
-            <Stack.Screen
-                name="Achievements"
-                component={AchievementsScreen}
-                options={{ title: 'Achievements' }}
-            />
-            <Stack.Screen
-                name="ParentDashboard"
-                component={ParentDashboardScreen}
-                options={{ title: 'Parent Dashboard' }}
-            />
         </Stack.Navigator>
     );
 };
 
 const App = () => {
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <AuthProvider>
-                <NavigationContainer>
-                    <AppNavigator />
-                </NavigationContainer>
-            </AuthProvider>
-        </GestureHandlerRootView>
+        <RootView style={{ flex: 1 }}>
+            <ErrorBoundary>
+                <AuthProvider>
+                    <NavigationContainer>
+                        <AppNavigator />
+                    </NavigationContainer>
+                </AuthProvider>
+            </ErrorBoundary>
+        </RootView>
     );
 };
 

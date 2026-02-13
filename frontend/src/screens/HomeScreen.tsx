@@ -245,6 +245,12 @@ const HomeScreen = () => {
                     {isAuthenticated ? (
                         <>
                             <ProfileSwitcher compact onProfileChange={handleProfileChange} />
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('ParentDashboard' as never)}
+                                style={styles.logoutButton}
+                            >
+                                <Icon name="users" size={18} color={colors.text.secondary} />
+                            </TouchableOpacity>
                             <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
                                 <Icon name="sign-out" size={18} color={colors.text.secondary} />
                             </TouchableOpacity>
@@ -315,45 +321,6 @@ const HomeScreen = () => {
                     }
                 />
             )}
-
-            {/* Navigation Buttons */}
-            <View style={styles.navContainer}>
-                <TouchableOpacity
-                    style={styles.navButton}
-                    onPress={() => navigation.navigate('Bookmarks' as never)}
-                >
-                    <Icon name="bookmark" size={20} color={colors.accent} />
-                    <Text style={styles.navButtonText}>Bookmarks</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navButton}
-                    onPress={() => navigation.navigate('MonthlyBookList' as never)}
-                >
-                    <Icon name="book" size={20} color={colors.primary} />
-                    <Text style={styles.navButtonText}>Books</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navButton}
-                    onPress={() => navigation.navigate('Search' as never)}
-                >
-                    <Icon name="search" size={20} color={colors.secondary} />
-                    <Text style={styles.navButtonText}>Search</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navButton}
-                    onPress={() => navigation.navigate('Achievements' as never)}
-                >
-                    <Icon name="trophy" size={20} color={colors.achievements.gold} />
-                    <Text style={styles.navButtonText}>Awards</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navButton}
-                    onPress={() => navigation.navigate('ParentDashboard' as never)}
-                >
-                    <Icon name="users" size={20} color={colors.categories.arts} />
-                    <Text style={styles.navButtonText}>Parents</Text>
-                </TouchableOpacity>
-            </View>
 
             {/* Image Viewer Modal */}
             <Modal visible={isImageViewerVisible} transparent={true}>
@@ -470,24 +437,6 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: spacing.md,
-    },
-    navContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: colors.background.card,
-        paddingVertical: spacing.sm,
-        borderTopWidth: 1,
-        borderTopColor: colors.background.secondary,
-        ...shadows.sm,
-    },
-    navButton: {
-        alignItems: 'center',
-        padding: spacing.xs,
-    },
-    navButtonText: {
-        fontSize: 10,
-        color: colors.text.secondary,
-        marginTop: 2,
     },
     webImageViewerOverlay: {
         flex: 1,

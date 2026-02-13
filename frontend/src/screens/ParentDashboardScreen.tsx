@@ -319,14 +319,14 @@ const ParentDashboardScreen = () => {
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={styles.actionButton}
-                                        onPress={() => navigation.navigate('Achievements' as never)}
+                                        onPress={() => navigation.navigate('MainTabs' as never, { screen: 'Achievements' } as never)}
                                     >
                                         <Icon name="trophy" size={24} color={colors.achievements.gold} />
                                         <Text style={styles.actionButtonText}>View Achievements</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={styles.actionButton}
-                                        onPress={() => navigation.navigate('MonthlyBookList' as never)}
+                                        onPress={() => navigation.navigate('MainTabs' as never, { screen: 'MonthlyBookList' } as never)}
                                     >
                                         <Icon name="book" size={24} color={colors.primary} />
                                         <Text style={styles.actionButtonText}>Browse Books</Text>
