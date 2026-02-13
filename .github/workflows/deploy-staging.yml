@@ -52,6 +52,18 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/api:${{ github.sha }}
+          secrets: |
+            DATABASE_URL=DATABASE_URL:latest
+            DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest
+            NEWS_API_KEY=NEWS_API_KEY:latest
+            GEMINI_API_KEY=GEMINI_API_KEY:latest
+            BRAVE_API_KEY=BRAVE_API_KEY:latest
+          env_vars: |
+            ENVIRONMENT=production
+            DJANGO_DEBUG=False
+            DJANGO_ALLOWED_HOSTS=.run.app
+            CORS_ALLOWED_ORIGINS=https://bookofmonth.web.app
+            LOG_LEVEL=INFO
 
       - name: Update Cloud Run Jobs
         run: |

@@ -31,17 +31,20 @@ def is_account_locked(username_or_ip):
     Returns:
         tuple: (is_locked, remaining_seconds)
     """
-    lockout_key = get_lockout_cache_key(username_or_ip)
-    lockout_until = cache.get(lockout_key)
+    try:
+        lockout_key = get_lockout_cache_key(username_or_ip)
+        lockout_until = cache.get(lockout_key)
 
-    if lockout_until:
-        remaining = (lockout_until - timezone.now()).total_seconds()
-        if remaining > 0:
-            return True, int(remaining)
-        else:
-            # Lockout has expired, clean up
-            cache.delete(lockout_key)
-            cache.delete(get_failed_attempts_cache_key(username_or_ip))
+        if lockout_until:
+            remaining = (lockout_until - timezone.now()).total_seconds()
+            if remaining > 0:
+                return True, int(remaining)
+            else:
+                # Lockout has expired, clean up
+                cache.delete(lockout_key)
+                cache.delete(get_failed_attempts_cache_key(username_or_ip))
+    except Exception:
+        pass
 
     return False, 0
 
@@ -56,24 +59,27 @@ def record_failed_attempt(username_or_ip):
     Returns:
         tuple: (attempts_count, is_now_locked, lockout_seconds)
     """
-    attempts_key = get_failed_attempts_cache_key(username_or_ip)
+    try:
+        attempts_key = get_failed_attempts_cache_key(username_or_ip)
 
-    # Get current attempts count
-    attempts = cache.get(attempts_key, 0)
-    attempts += 1
+        # Get current attempts count
+        attempts = cache.get(attempts_key, 0)
+        attempts += 1
 
-    # Store with expiration slightly longer than lockout duration
-    cache_timeout = LOCKOUT_DURATION_MINUTES * 60 + 60
-    cache.set(attempts_key, attempts, timeout=cache_timeout)
+        # Store with expiration slightly longer than lockout duration
+        cache_timeout = LOCKOUT_DURATION_MINUTES * 60 + 60
+        cache.set(attempts_key, attempts, timeout=cache_timeout)
 
-    # Check if we should lock the account
-    if attempts >= MAX_FAILED_ATTEMPTS:
-        lockout_key = get_lockout_cache_key(username_or_ip)
-        lockout_until = timezone.now() + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
-        cache.set(lockout_key, lockout_until, timeout=LOCKOUT_DURATION_MINUTES * 60)
-        return attempts, True, LOCKOUT_DURATION_MINUTES * 60
+        # Check if we should lock the account
+        if attempts >= MAX_FAILED_ATTEMPTS:
+            lockout_key = get_lockout_cache_key(username_or_ip)
+            lockout_until = timezone.now() + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
+            cache.set(lockout_key, lockout_until, timeout=LOCKOUT_DURATION_MINUTES * 60)
+            return attempts, True, LOCKOUT_DURATION_MINUTES * 60
 
-    return attempts, False, 0
+        return attempts, False, 0
+    except Exception:
+        return 1, False, 0
 
 
 def reset_failed_attempts(username_or_ip):
@@ -83,8 +89,11 @@ def reset_failed_attempts(username_or_ip):
     Args:
         username_or_ip: Username or IP address
     """
-    cache.delete(get_failed_attempts_cache_key(username_or_ip))
-    cache.delete(get_lockout_cache_key(username_or_ip))
+    try:
+        cache.delete(get_failed_attempts_cache_key(username_or_ip))
+        cache.delete(get_lockout_cache_key(username_or_ip))
+    except Exception:
+        pass
 
 
 def get_remaining_attempts(username_or_ip):
@@ -97,9 +106,12 @@ def get_remaining_attempts(username_or_ip):
     Returns:
         int: Number of remaining attempts
     """
-    attempts_key = get_failed_attempts_cache_key(username_or_ip)
-    attempts = cache.get(attempts_key, 0)
-    return max(0, MAX_FAILED_ATTEMPTS - attempts)
+    try:
+        attempts_key = get_failed_attempts_cache_key(username_or_ip)
+        attempts = cache.get(attempts_key, 0)
+        return max(0, MAX_FAILED_ATTEMPTS - attempts)
+    except Exception:
+        return MAX_FAILED_ATTEMPTS
 
 
 def get_client_ip(request):
