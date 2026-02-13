@@ -1,9 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl, Platform, Image, Dimensions } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ttsService } from '../services/TtsService';
-import ImageViewer from 'react-native-image-zoom-viewer';
 import Icon from 'react-native-vector-icons/FontAwesome';
+
+// ImageViewer is native-only; on web we use a simple image modal
+const ImageViewer = Platform.OS !== 'web'
+    ? require('react-native-image-zoom-viewer').default
+    : null;
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
 import DailyEntryCard from '../components/DailyEntryCard';
@@ -353,11 +357,29 @@ const HomeScreen = () => {
 
             {/* Image Viewer Modal */}
             <Modal visible={isImageViewerVisible} transparent={true}>
-                <ImageViewer
-                    imageUrls={currentImage}
-                    enableSwipeDown={true}
-                    onCancel={() => setIsImageViewerVisible(false)}
-                />
+                {Platform.OS === 'web' ? (
+                    <TouchableOpacity
+                        style={styles.webImageViewerOverlay}
+                        activeOpacity={1}
+                        onPress={() => setIsImageViewerVisible(false)}
+                    >
+                        {currentImage.length > 0 && (
+                            <Image
+                                source={{ uri: currentImage[0].url }}
+                                style={styles.webImageViewerImage}
+                                resizeMode="contain"
+                            />
+                        )}
+                    </TouchableOpacity>
+                ) : (
+                    ImageViewer && (
+                        <ImageViewer
+                            imageUrls={currentImage}
+                            enableSwipeDown={true}
+                            onCancel={() => setIsImageViewerVisible(false)}
+                        />
+                    )
+                )}
             </Modal>
         </View>
     );
@@ -466,6 +488,16 @@ const styles = StyleSheet.create({
         fontSize: 10,
         color: colors.text.secondary,
         marginTop: 2,
+    },
+    webImageViewerOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    webImageViewerImage: {
+        width: Dimensions.get('window').width * 0.9,
+        height: Dimensions.get('window').height * 0.8,
     },
 });
 

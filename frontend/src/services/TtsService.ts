@@ -1,21 +1,34 @@
-import Tts from 'react-native-tts';
+import { Platform } from 'react-native';
 
 class TtsService {
-    constructor() {
-        Tts.setDefaultLanguage('en-US');
-        Tts.setDucking(true); // Lower other audio while speaking
+    private webUtterance: SpeechSynthesisUtterance | null = null;
 
-        Tts.addEventListener('tts-start', (event) => { if (__DEV__) console.log('start', event); });
-        Tts.addEventListener('tts-finish', (event) => { if (__DEV__) console.log('finish', event); });
-        Tts.addEventListener('tts-cancel', (event) => { if (__DEV__) console.log('cancel', event); });
-        Tts.addEventListener('tts-paused', (event) => { if (__DEV__) console.log('paused', event); });
-        Tts.addEventListener('tts-resumed', (event) => { if (__DEV__) console.log('resumed', event); });
+    constructor() {
+        if (Platform.OS !== 'web') {
+            try {
+                const Tts = require('react-native-tts').default;
+                Tts.setDefaultLanguage('en-US');
+                Tts.setDucking(true);
+            } catch (e) {
+                // TTS not available on this platform
+            }
+        }
     }
 
     async speak(text: string): Promise<void> {
         try {
-            await Tts.stop(); // Stop any ongoing speech
-            await Tts.speak(text);
+            if (Platform.OS === 'web') {
+                this.stopWeb();
+                if (typeof window !== 'undefined' && window.speechSynthesis) {
+                    this.webUtterance = new SpeechSynthesisUtterance(text);
+                    this.webUtterance.lang = 'en-US';
+                    window.speechSynthesis.speak(this.webUtterance);
+                }
+            } else {
+                const Tts = require('react-native-tts').default;
+                await Tts.stop();
+                await Tts.speak(text);
+            }
         } catch (error) {
             if (__DEV__) console.error('TTS speak error:', error);
         }
@@ -23,10 +36,22 @@ class TtsService {
 
     async stop(): Promise<void> {
         try {
-            await Tts.stop();
+            if (Platform.OS === 'web') {
+                this.stopWeb();
+            } else {
+                const Tts = require('react-native-tts').default;
+                await Tts.stop();
+            }
         } catch (error) {
             if (__DEV__) console.error('TTS stop error:', error);
         }
+    }
+
+    private stopWeb(): void {
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
+        this.webUtterance = null;
     }
 }
 

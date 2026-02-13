@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
@@ -17,7 +18,6 @@ import SearchScreen from './src/screens/SearchScreen';
 import QuizScreen from './src/screens/QuizScreen';
 import AchievementsScreen from './src/screens/AchievementsScreen';
 import ParentDashboardScreen from './src/screens/ParentDashboardScreen';
-import { notificationService } from './src/services/NotificationService';
 import { colors } from './src/theme';
 
 const Stack = createStackNavigator();
@@ -26,16 +26,23 @@ const AppNavigator = () => {
     const { isLoading, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        notificationService.scheduleDailyNotification(
-            "New Daily Entry!",
-            "A new exciting story awaits you. Tap to read!",
-            8,
-            0
-        );
-
-        return () => {
-            notificationService.cancelAllNotifications();
-        };
+        // Push notifications are only available on native platforms
+        if (Platform.OS !== 'web') {
+            try {
+                const { notificationService } = require('./src/services/NotificationService');
+                notificationService.scheduleDailyNotification(
+                    "New Daily Entry!",
+                    "A new exciting story awaits you. Tap to read!",
+                    8,
+                    0
+                );
+                return () => {
+                    notificationService.cancelAllNotifications();
+                };
+            } catch (e) {
+                // Notification service not available
+            }
+        }
     }, []);
 
     if (isLoading) {
@@ -60,6 +67,7 @@ const AppNavigator = () => {
                 cardStyle: {
                     backgroundColor: colors.background.primary,
                 },
+                ...(Platform.OS === 'web' ? { animationEnabled: false } : {}),
             }}
         >
             <Stack.Screen
@@ -126,41 +134,15 @@ const AppNavigator = () => {
     );
 };
 
-const getPrefix = () => {
-    if (typeof window !== 'undefined' && window.location?.origin) {
-        return window.location.origin;
-    }
-    return 'http://localhost:3003';
-};
-
-const linking = {
-    prefixes: [getPrefix()],
-    config: {
-        screens: {
-            Login: 'login',
-            Home: '',
-            Register: 'register',
-            Bookmarks: 'bookmarks',
-            ChildProfileList: 'child-profiles',
-            AddChildProfile: 'child-profiles/add',
-            EditChildProfile: 'child-profiles/edit',
-            MonthlyBookList: 'monthly-books',
-            MonthlyBook: 'monthly-books/:bookId',
-            Search: 'search',
-            Quiz: 'quiz',
-            Achievements: 'achievements',
-            ParentDashboard: 'parent-dashboard',
-        },
-    },
-};
-
 const App = () => {
     return (
-        <AuthProvider>
-            <NavigationContainer linking={linking}>
-                <AppNavigator />
-            </NavigationContainer>
-        </AuthProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <AuthProvider>
+                <NavigationContainer>
+                    <AppNavigator />
+                </NavigationContainer>
+            </AuthProvider>
+        </GestureHandlerRootView>
     );
 };
 
