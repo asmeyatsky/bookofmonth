@@ -285,6 +285,7 @@ const HomeScreen = () => {
                 </View>
             ) : (
                 <FlatList
+                    style={styles.list}
                     data={newsEvents}
                     keyExtractor={item => item.id.toString()}
                     renderItem={({ item }) => (
@@ -441,6 +442,9 @@ const styles = StyleSheet.create({
         color: colors.text.secondary,
         textAlign: 'center',
         marginTop: spacing.sm,
+    },
+    list: {
+        flex: 1,
     },
     listContent: {
         padding: spacing.md,
