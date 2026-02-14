@@ -30,7 +30,7 @@ describe('AuthService', () => {
       const result = await authService.initialize();
 
       expect(result).toBe(false);
-      expect(AsyncStorage.getItem).toHaveBeenCalledWith('auth_token');
+      expect(AsyncStorage.getItem).toHaveBeenCalledWith('@auth_token');
     });
 
     it('should return true when token exists and user data is stored', async () => {
@@ -67,16 +67,18 @@ describe('AuthService', () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/users/login/'),
+        'http://localhost:8000/auth/login/',
         expect.objectContaining({
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: 'testuser', password: 'password123' }),
+          signal: expect.any(Object), // Signal is an AbortSignal object
         })
       );
 
-      expect(AsyncStorage.setItem).toHaveBeenCalledWith('auth_token', 'new-token');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('@auth_token', 'new-token');
       expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-        'user_data',
+        '@auth_user',
         JSON.stringify(mockResponse.user)
       );
       expect(result).toEqual(mockResponse);
@@ -130,9 +132,17 @@ describe('AuthService', () => {
       });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/users/register/'),
+        'http://localhost:8000/auth/register/',
         expect.objectContaining({
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: 'newuser',
+            email: 'new@example.com',
+            password: 'password123',
+            password_confirm: 'password123',
+          }),
+          signal: expect.any(Object), // Signal is an AbortSignal object
         })
       );
 
@@ -167,7 +177,9 @@ describe('AuthService', () => {
 
       await authService.logout();
 
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(['auth_token', 'user_data']);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(2);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@auth_token');
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@auth_user');
     });
 
     it('should still clear local storage even if API call fails', async () => {
@@ -175,7 +187,9 @@ describe('AuthService', () => {
 
       await authService.logout();
 
-      expect(AsyncStorage.multiRemove).toHaveBeenCalledWith(['auth_token', 'user_data']);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledTimes(2);
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@auth_token');
+      expect(AsyncStorage.removeItem).toHaveBeenCalledWith('@auth_user');
     });
   });
 

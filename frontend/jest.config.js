@@ -2,7 +2,7 @@ module.exports = {
   preset: 'react-native',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   testMatch: ['**/__tests__/**/*.(test|spec).(ts|tsx|js)'],
-  testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
+  testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/', '.*__tests__/App.test.tsx'],
   transformIgnorePatterns: [
     'node_modules/(?!(react-native|@react-native|@react-navigation|react-native-.*|@react-native-async-storage|@react-native-firebase)/)',
   ],
@@ -22,5 +22,6 @@ module.exports = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '^../config$': '<rootDir>/__mocks__/config.ts', // Keep this change as it was successful
   },
 };

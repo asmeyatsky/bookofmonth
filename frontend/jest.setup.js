@@ -2,7 +2,6 @@
 import '@testing-library/react-native/extend-expect';
 
 // Mock react-native modules
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () =>
