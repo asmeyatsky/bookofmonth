@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl, Platform, Image, Dimensions } from 'react-native';
+import { View, Text, FlatList, ScrollView, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl, Platform, Image, Dimensions } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ttsService } from '../services/TtsService';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -37,17 +37,22 @@ const HomeScreen = () => {
     const [readEvents, setReadEvents] = useState<Set<string>>(new Set());
     const [currentStreak, setCurrentStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
+    const [browsingAsGuest, setBrowsingAsGuest] = useState(false);
 
     const navigation = useNavigation();
     const { isAuthenticated, user, logout, activeChildProfile, refreshChildProfiles } = useAuth();
 
     useFocusEffect(
         useCallback(() => {
-            loadData();
+            if (isAuthenticated || browsingAsGuest) {
+                loadData();
+            } else {
+                setLoading(false);
+            }
             return () => {
                 ttsService.stop();
             };
-        }, [isAuthenticated, activeChildProfile?.id])
+        }, [isAuthenticated, activeChildProfile?.id, browsingAsGuest])
     );
 
     const loadData = async () => {
@@ -226,6 +231,64 @@ const HomeScreen = () => {
                 <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={styles.loadingText}>Loading today's stories...</Text>
             </View>
+        );
+    }
+
+    if (!isAuthenticated && !browsingAsGuest) {
+        return (
+            <ScrollView style={styles.container} contentContainerStyle={styles.welcomeContent}>
+                {/* Hero Section */}
+                <View style={styles.heroSection}>
+                    <Icon name="book" size={64} color={colors.primary} />
+                    <Text style={styles.heroTitle}>Book of the Month</Text>
+                    <Text style={styles.heroTagline}>
+                        Daily stories and news for young readers, made fun and age-appropriate
+                    </Text>
+                </View>
+
+                {/* Feature Highlights */}
+                <View style={styles.featuresGrid}>
+                    {[
+                        { icon: 'newspaper-o', title: 'Daily Stories', desc: 'Fresh, kid-friendly news every day' },
+                        { icon: 'line-chart', title: 'Reading Streaks', desc: 'Build daily reading habits' },
+                        { icon: 'bookmark', title: 'Bookmarks', desc: 'Save your favorite stories' },
+                        { icon: 'book', title: 'Monthly Books', desc: 'Curated book recommendations' },
+                    ].map((feature) => (
+                        <View key={feature.icon} style={styles.featureCard}>
+                            <View style={styles.featureIconWrapper}>
+                                <Icon name={feature.icon} size={24} color={colors.text.inverse} />
+                            </View>
+                            <Text style={styles.featureTitle}>{feature.title}</Text>
+                            <Text style={styles.featureDesc}>{feature.desc}</Text>
+                        </View>
+                    ))}
+                </View>
+
+                {/* CTA Buttons */}
+                <View style={styles.ctaContainer}>
+                    <TouchableOpacity
+                        style={styles.ctaPrimary}
+                        onPress={() => navigation.navigate('Login' as never)}
+                    >
+                        <Text style={styles.ctaPrimaryText}>Sign Up</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.ctaSecondary}
+                        onPress={() => navigation.navigate('Login' as never)}
+                    >
+                        <Text style={styles.ctaSecondaryText}>Log In</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.ctaTertiary}
+                        onPress={() => {
+                            setBrowsingAsGuest(true);
+                            setLoading(true);
+                        }}
+                    >
+                        <Text style={styles.ctaTertiaryText}>Browse as Guest</Text>
+                    </TouchableOpacity>
+                </View>
+            </ScrollView>
         );
     }
 
@@ -495,6 +558,108 @@ const styles = StyleSheet.create({
     webImageViewerImage: {
         width: Dimensions.get('window').width * 0.9,
         height: Dimensions.get('window').height * 0.8,
+    },
+    // Welcome screen styles
+    welcomeContent: {
+        flexGrow: 1,
+        paddingBottom: spacing.xl,
+    },
+    heroSection: {
+        alignItems: 'center',
+        paddingTop: spacing.xxl,
+        paddingBottom: spacing.lg,
+        paddingHorizontal: spacing.md,
+    },
+    heroTitle: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: colors.text.primary,
+        marginTop: spacing.md,
+        textAlign: 'center',
+    },
+    heroTagline: {
+        fontSize: 16,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: spacing.sm,
+        lineHeight: 24,
+        paddingHorizontal: spacing.md,
+    },
+    featuresGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        paddingHorizontal: spacing.md,
+        marginTop: spacing.lg,
+        gap: spacing.md,
+    },
+    featureCard: {
+        width: '44%',
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
+        alignItems: 'center',
+        ...shadows.md,
+    },
+    featureIconWrapper: {
+        width: 48,
+        height: 48,
+        borderRadius: borderRadius.round,
+        backgroundColor: colors.secondary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.sm,
+    },
+    featureTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.text.primary,
+        textAlign: 'center',
+    },
+    featureDesc: {
+        fontSize: 12,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    ctaContainer: {
+        paddingHorizontal: spacing.lg,
+        marginTop: spacing.xl,
+        gap: spacing.sm,
+    },
+    ctaPrimary: {
+        backgroundColor: colors.primary,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.lg,
+        alignItems: 'center',
+        ...shadows.md,
+    },
+    ctaPrimaryText: {
+        color: colors.text.inverse,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    ctaSecondary: {
+        backgroundColor: colors.background.card,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.lg,
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: colors.primary,
+    },
+    ctaSecondaryText: {
+        color: colors.primary,
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    ctaTertiary: {
+        paddingVertical: spacing.md,
+        alignItems: 'center',
+    },
+    ctaTertiaryText: {
+        color: colors.text.secondary,
+        fontSize: 16,
+        textDecorationLine: 'underline',
     },
 });
 
