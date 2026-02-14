@@ -58,7 +58,7 @@ const AppNavigator = () => {
 
     return (
         <Stack.Navigator
-            initialRouteName={isAuthenticated ? "Home" : "Login"}
+            initialRouteName="Home"
             screenOptions={{
                 headerStyle: {
                     backgroundColor: colors.background.card,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl, Platform, Image, Dimensions } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { ttsService } from '../services/TtsService';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -37,10 +37,13 @@ const HomeScreen = () => {
     const [readEvents, setReadEvents] = useState<Set<string>>(new Set());
     const [currentStreak, setCurrentStreak] = useState(0);
     const [longestStreak, setLongestStreak] = useState(0);
-    const [browsingAsGuest, setBrowsingAsGuest] = useState(false);
-
     const navigation = useNavigation();
+    const route = useRoute();
     const { isAuthenticated, user, logout, activeChildProfile, refreshChildProfiles } = useAuth();
+
+    const [browsingAsGuest, setBrowsingAsGuest] = useState(
+        !!(route.params as any)?.browseAsGuest
+    );
 
     useFocusEffect(
         useCallback(() => {
