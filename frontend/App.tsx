@@ -2,11 +2,8 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, Platform, View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import ErrorBoundary from './src/components/ErrorBoundary';
 import HomeScreen from './src/screens/HomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegistrationScreen from './src/screens/RegistrationScreen';
@@ -28,89 +25,11 @@ const RootView = Platform.OS === 'web'
     : require('react-native-gesture-handler').GestureHandlerRootView;
 
 const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
-
-const MainTabs = () => {
-    return (
-        <View style={{ flex: 1, height: '100%' }}>
-            <Tab.Navigator
-                screenOptions={{
-                    tabBarActiveTintColor: colors.primary,
-                    tabBarInactiveTintColor: colors.text.secondary,
-                    tabBarStyle: {
-                        backgroundColor: colors.background.card,
-                        borderTopColor: colors.background.secondary,
-                        height: 60, // Set a fixed height for consistency
-                    },
-                headerStyle: {
-                    backgroundColor: colors.background.card,
-                },
-                headerTintColor: colors.text.primary,
-                headerTitleStyle: {
-                    fontWeight: '600',
-                },
-            }}
-            tabBarHideOnKeyboard={true} // Hide tab bar when keyboard is open
-        >
-            <Tab.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{
-                    headerShown: false,
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon name="home" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Bookmarks"
-                component={BookmarksScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon name="bookmark" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="MonthlyBookList"
-                component={MonthlyBookListScreen}
-                options={{
-                    title: 'Books',
-                    tabBarLabel: 'Books',
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon name="book" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Search"
-                component={SearchScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon name="search" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tab.Screen
-                name="Achievements"
-                component={AchievementsScreen}
-                options={{
-                    title: 'Awards',
-                    tabBarLabel: 'Awards',
-                    tabBarIcon: ({ color, size }) => (
-                        <Icon name="trophy" size={size} color={color} />
-                    ),
-                }}
-            />
-        </Tab.Navigator>
-    );
-};
 
 const AppNavigator = () => {
     const { isLoading, isAuthenticated } = useAuth();
 
     useEffect(() => {
-        // Push notifications are only available on native platforms
         if (Platform.OS !== 'web') {
             try {
                 const { notificationService } = require('./src/services/NotificationService');
@@ -139,7 +58,7 @@ const AppNavigator = () => {
 
     return (
         <Stack.Navigator
-            initialRouteName={isAuthenticated ? "MainTabs" : "Login"}
+            initialRouteName={isAuthenticated ? "Home" : "Login"}
             screenOptions={{
                 headerStyle: {
                     backgroundColor: colors.background.card,
@@ -159,30 +78,13 @@ const AppNavigator = () => {
                 component={LoginScreen}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen name="Register" component={RegistrationScreen} />
             <Stack.Screen
-                name="MainTabs"
-                component={MainTabs}
+                name="Home"
+                component={HomeScreen}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen
-                name="ParentDashboard"
-                component={ParentDashboardScreen}
-                options={{ title: 'Parent Dashboard' }}
-            />
-            <Stack.Screen
-                name="MonthlyBook"
-                component={MonthlyBookScreen}
-                options={{
-                    title: 'Reading',
-                    headerShown: false,
-                }}
-            />
-            <Stack.Screen
-                name="Quiz"
-                component={QuizScreen}
-                options={{ title: 'Quiz' }}
-            />
+            <Stack.Screen name="Register" component={RegistrationScreen} />
+            <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
             <Stack.Screen
                 name="ChildProfileList"
                 component={ChildProfileListScreen}
@@ -198,20 +100,76 @@ const AppNavigator = () => {
                 component={EditChildProfileScreen}
                 options={{ title: 'Edit Child Profile' }}
             />
+            <Stack.Screen
+                name="MonthlyBookList"
+                component={MonthlyBookListScreen}
+                options={{ title: 'Monthly Books' }}
+            />
+            <Stack.Screen
+                name="MonthlyBook"
+                component={MonthlyBookScreen}
+                options={{
+                    title: 'Reading',
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
+                name="Search"
+                component={SearchScreen}
+                options={{ title: 'Search' }}
+            />
+            <Stack.Screen
+                name="Quiz"
+                component={QuizScreen}
+                options={{ title: 'Quiz' }}
+            />
+            <Stack.Screen
+                name="Achievements"
+                component={AchievementsScreen}
+                options={{ title: 'Achievements' }}
+            />
+            <Stack.Screen
+                name="ParentDashboard"
+                component={ParentDashboardScreen}
+                options={{ title: 'Parent Dashboard' }}
+            />
         </Stack.Navigator>
     );
+};
+
+const origin = Platform.OS === 'web' && typeof window !== 'undefined'
+    ? window.location.origin
+    : 'http://localhost:3003';
+
+const linking = {
+    prefixes: [origin],
+    config: {
+        screens: {
+            Login: 'login',
+            Home: '',
+            Register: 'register',
+            Bookmarks: 'bookmarks',
+            ChildProfileList: 'child-profiles',
+            AddChildProfile: 'child-profiles/add',
+            EditChildProfile: 'child-profiles/edit',
+            MonthlyBookList: 'monthly-books',
+            MonthlyBook: 'monthly-books/:bookId',
+            Search: 'search',
+            Quiz: 'quiz',
+            Achievements: 'achievements',
+            ParentDashboard: 'parent-dashboard',
+        },
+    },
 };
 
 const App = () => {
     return (
         <RootView style={{ flex: 1 }}>
-            <ErrorBoundary>
-                <AuthProvider>
-                    <NavigationContainer>
-                        <AppNavigator />
-                    </NavigationContainer>
-                </AuthProvider>
-            </ErrorBoundary>
+            <AuthProvider>
+                <NavigationContainer linking={linking}>
+                    <AppNavigator />
+                </NavigationContainer>
+            </AuthProvider>
         </RootView>
     );
 };

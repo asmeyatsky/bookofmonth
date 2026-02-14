@@ -14,7 +14,7 @@ const RegistrationScreen = () => {
 
     React.useEffect(() => {
         if (isAuthenticated) {
-            navigation.navigate('MainTabs' as never);
+            navigation.navigate('Home' as never);
         }
     }, [isAuthenticated]);
 
@@ -33,7 +33,7 @@ const RegistrationScreen = () => {
         try {
             await register({ username, email, password, password_confirm: passwordConfirm });
             Alert.alert('Success', 'Registration successful!');
-            navigation.navigate('MainTabs' as never);
+            navigation.navigate('Home' as never);
         } catch (error: any) {
             if (__DEV__) console.error(error);
             Alert.alert('Error', error.message || 'Registration failed');

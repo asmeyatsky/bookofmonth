@@ -39,7 +39,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             } else {
                 await register({ username, email, password, password_confirm: passwordConfirm });
             }
-            navigation.replace('MainTabs');
+            navigation.replace('Home');
         } catch (error: any) {
             Alert.alert('Error', error.message || 'Authentication failed');
         } finally {
@@ -126,7 +126,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('MainTabs')}
+                    onPress={() => navigation.navigate('Home')}
                     style={styles.skipButton}
                 >
                     <Text style={styles.skipText}>Continue as Guest</Text>

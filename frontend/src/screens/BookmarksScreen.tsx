@@ -43,7 +43,7 @@ const BookmarksScreen = () => {
                     "Authentication Required",
                     "Please log in to view bookmarks.",
                     [
-                        { text: "Cancel", onPress: () => navigation.navigate('Home' as never) },
+                        { text: "Cancel", onPress: () => navigation.goBack() },
                         { text: "Log In", onPress: () => navigation.navigate('Login' as never) }
                     ]
                 );

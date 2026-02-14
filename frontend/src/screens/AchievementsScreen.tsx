@@ -87,7 +87,7 @@ const AchievementsScreen = () => {
                     "Authentication Required",
                     "Please log in to view achievements.",
                     [
-                        { text: "Cancel", onPress: () => navigation.navigate('Home' as never) },
+                        { text: "Cancel", onPress: () => navigation.goBack() },
                         { text: "Log In", onPress: () => navigation.navigate('Login' as never) }
                     ]
                 );
