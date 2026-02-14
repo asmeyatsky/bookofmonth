@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Alert, Platform } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
@@ -37,8 +37,13 @@ const BottomNavBar = () => {
         navigation.navigate(tabName as never);
     };
 
+    // Use fixed positioning on web to prevent flashing
+    const containerStyle = Platform.OS === 'web' 
+        ? [styles.container, styles.webFixed]
+        : styles.container;
+
     return (
-        <View style={styles.container}>
+        <View style={containerStyle}>
             {tabs.map((tab) => {
                 const isActive = currentRoute === tab.name;
                 return (
@@ -74,6 +79,13 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: colors.background.secondary,
         ...shadows.sm,
+    },
+    webFixed: {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 999,
     },
     tab: {
         alignItems: 'center',
