@@ -318,12 +318,11 @@ const HomeScreen = () => {
             </Text>
         </View>
     ) : Platform.OS === 'web' ? (
-        <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={styles.listContent}
-        >
-            {newsEvents.map(renderStoryCard)}
-        </ScrollView>
+        <View style={{ flex: 1, minHeight: 0, overflow: 'auto' as any }}>
+            <View style={styles.listContent}>
+                {newsEvents.map(renderStoryCard)}
+            </View>
+        </View>
     ) : (
         <FlatList
             style={{ flex: 1 }}
@@ -440,6 +439,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
+        ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     loadingContainer: {
         flex: 1,
