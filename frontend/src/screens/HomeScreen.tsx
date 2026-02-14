@@ -218,10 +218,7 @@ const HomeScreen = () => {
                     style: "destructive",
                     onPress: async () => {
                         await logout();
-                        navigation.reset({
-                            index: 0,
-                            routes: [{ name: 'Login' as never }],
-                        });
+                        setBrowsingAsGuest(false);
                     }
                 }
             ]
@@ -295,17 +292,81 @@ const HomeScreen = () => {
         );
     }
 
+    const renderStoryCard = (item: NewsEvent) => (
+        <DailyEntryCard
+            key={item.id.toString()}
+            event={item}
+            isBookmarked={bookmarkedEvents.has(item.id)}
+            isRead={readEvents.has(item.id)}
+            onToggleBookmark={toggleBookmark}
+            onMarkAsRead={markAsRead}
+            onReadAloud={(content) => ttsService.speak(content)}
+            onImagePress={openImageViewer}
+            readingLevel={activeChildProfile?.reading_level}
+        />
+    );
+
+    const storiesContent = newsEvents.length === 0 ? (
+        <View style={styles.emptyContainer}>
+            <Icon name="book" size={60} color={colors.text.light} />
+            <Text style={styles.emptyTitle}>No Stories Yet</Text>
+            <Text style={styles.emptyText}>
+                {activeChildProfile
+                    ? `No stories available for ${activeChildProfile.name}'s reading level yet.`
+                    : 'Check back soon for new stories!'}
+            </Text>
+        </View>
+    ) : Platform.OS === 'web' ? (
+        <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.listContent}
+        >
+            {newsEvents.map(renderStoryCard)}
+        </ScrollView>
+    ) : (
+        <FlatList
+            style={{ flex: 1 }}
+            data={newsEvents}
+            keyExtractor={item => item.id.toString()}
+            renderItem={({ item }) => renderStoryCard(item)}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    colors={[colors.primary]}
+                    tintColor={colors.primary}
+                />
+            }
+        />
+    );
+
     return (
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    <Text style={styles.title}>Daily Stories</Text>
-                    {activeChildProfile && (
-                        <Text style={styles.subtitle}>
-                            Reading as {activeChildProfile.name}
-                        </Text>
-                    )}
+                    {/* Home button to return to welcome screen */}
+                    <TouchableOpacity
+                        style={styles.homeButton}
+                        onPress={() => {
+                            if (isAuthenticated) {
+                                handleLogout();
+                            } else {
+                                setBrowsingAsGuest(false);
+                            }
+                        }}
+                    >
+                        <Icon name="home" size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    <View>
+                        <Text style={styles.title}>Daily Stories</Text>
+                        {activeChildProfile && (
+                            <Text style={styles.subtitle}>
+                                Reading as {activeChildProfile.name}
+                            </Text>
+                        )}
+                    </View>
                 </View>
                 <View style={styles.headerRight}>
                     {isAuthenticated ? (
@@ -343,44 +404,7 @@ const HomeScreen = () => {
             )}
 
             {/* News Events List */}
-            {newsEvents.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                    <Icon name="book" size={60} color={colors.text.light} />
-                    <Text style={styles.emptyTitle}>No Stories Yet</Text>
-                    <Text style={styles.emptyText}>
-                        {activeChildProfile
-                            ? `No stories available for ${activeChildProfile.name}'s reading level yet.`
-                            : 'Check back soon for new stories!'}
-                    </Text>
-                </View>
-            ) : (
-                <FlatList
-                    style={{ flex: 1 }}
-                    data={newsEvents}
-                    keyExtractor={item => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <DailyEntryCard
-                            event={item}
-                            isBookmarked={bookmarkedEvents.has(item.id)}
-                            isRead={readEvents.has(item.id)}
-                            onToggleBookmark={toggleBookmark}
-                            onMarkAsRead={markAsRead}
-                            onReadAloud={(content) => ttsService.speak(content)}
-                            onImagePress={openImageViewer}
-                            readingLevel={activeChildProfile?.reading_level}
-                        />
-                    )}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[colors.primary]}
-                            tintColor={colors.primary}
-                        />
-                    }
-                />
-            )}
+            {storiesContent}
 
             {/* Navigation Buttons */}
             <View style={styles.navContainer}>
@@ -455,7 +479,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
-        ...(Platform.OS === 'web' ? { height: '100vh' as any, overflow: 'hidden' as any } : {}),
     },
     loadingContainer: {
         flex: 1,
@@ -480,6 +503,12 @@ const styles = StyleSheet.create({
     },
     headerLeft: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    homeButton: {
+        padding: spacing.xs,
     },
     headerRight: {
         flexDirection: 'row',
