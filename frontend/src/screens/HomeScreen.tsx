@@ -289,6 +289,7 @@ const HomeScreen = () => {
                 </View>
             ) : (
                 <FlatList
+                    style={{ flex: 1 }}
                     data={newsEvents}
                     keyExtractor={item => item.id.toString()}
                     renderItem={({ item }) => (
