@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 interface LoginScreenProps {
     navigation: any;
@@ -59,6 +61,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <View style={styles.formContainer}>
+                <Icon name="book" size={48} color={colors.primary} style={styles.logo} />
                 <Text style={styles.title}>Book of the Month</Text>
                 <Text style={styles.subtitle}>
                     {isLogin ? 'Welcome back!' : 'Create an account'}
@@ -67,6 +70,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <TextInput
                     style={styles.input}
                     placeholder="Username"
+                    placeholderTextColor={colors.text.light}
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
@@ -77,6 +81,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         placeholder="Email"
+                        placeholderTextColor={colors.text.light}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -88,6 +93,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 <TextInput
                     style={styles.input}
                     placeholder="Password"
+                    placeholderTextColor={colors.text.light}
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
@@ -97,6 +103,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         placeholder="Confirm Password"
+                        placeholderTextColor={colors.text.light}
                         value={passwordConfirm}
                         onChangeText={setPasswordConfirm}
                         secureTextEntry
@@ -109,7 +116,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                     disabled={loading}
                 >
                     {loading ? (
-                        <ActivityIndicator color="#fff" />
+                        <ActivityIndicator color={colors.text.inverse} />
                     ) : (
                         <Text style={styles.buttonText}>
                             {isLogin ? 'Log In' : 'Sign Up'}
@@ -139,64 +146,70 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: colors.background.primary,
     },
     formContainer: {
         flex: 1,
         justifyContent: 'center',
-        padding: 20,
+        padding: spacing.lg,
+    },
+    logo: {
+        alignSelf: 'center',
+        marginBottom: spacing.md,
     },
     title: {
         fontSize: 32,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 8,
-        color: '#333',
+        marginBottom: spacing.sm,
+        color: colors.text.primary,
     },
     subtitle: {
         fontSize: 18,
         textAlign: 'center',
-        marginBottom: 32,
-        color: '#666',
+        marginBottom: spacing.xl,
+        color: colors.text.secondary,
     },
     input: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 16,
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
         fontSize: 16,
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: colors.background.secondary,
+        color: colors.text.primary,
     },
     button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 8,
-        padding: 16,
+        backgroundColor: colors.primary,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: spacing.sm,
+        ...shadows.md,
     },
     buttonDisabled: {
         opacity: 0.7,
     },
     buttonText: {
-        color: '#fff',
+        color: colors.text.inverse,
         fontSize: 18,
         fontWeight: '600',
     },
     toggleButton: {
-        marginTop: 20,
+        marginTop: spacing.lg,
         alignItems: 'center',
     },
     toggleText: {
-        color: '#007AFF',
+        color: colors.secondary,
         fontSize: 16,
     },
     skipButton: {
-        marginTop: 16,
+        marginTop: spacing.md,
         alignItems: 'center',
     },
     skipText: {
-        color: '#999',
+        color: colors.text.light,
         fontSize: 14,
     },
 });

@@ -380,6 +380,12 @@ const MonthlyBookScreen = () => {
 
     return (
         <View style={styles.container}>
+            {/* Close button */}
+            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+                <Icon name="arrow-left" size={18} color={colors.text.primary} />
+                <Text style={styles.closeButtonText}>Back</Text>
+            </TouchableOpacity>
+
             {/* Main content */}
             {renderCurrentPage()}
 
@@ -507,6 +513,20 @@ const styles = StyleSheet.create({
     backButtonText: {
         color: colors.text.inverse,
         fontWeight: '600',
+    },
+    closeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        gap: spacing.sm,
+        backgroundColor: colors.background.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.background.secondary,
+    },
+    closeButtonText: {
+        fontSize: 16,
+        color: colors.text.primary,
+        fontWeight: '500',
     },
     pageContainer: {
         flex: 1,

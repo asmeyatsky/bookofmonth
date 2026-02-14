@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 enum AgeRange {
     AGE_4_6 = "4-6",
@@ -65,16 +67,21 @@ const EditChildProfileScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Edit Child Profile</Text>
+            <View style={styles.header}>
+                <Icon name="edit" size={40} color={colors.secondary} />
+                <Text style={styles.title}>Edit Child Profile</Text>
+            </View>
             <TextInput
                 style={styles.input}
                 placeholder="Child's Name"
+                placeholderTextColor={colors.text.light}
                 value={name}
                 onChangeText={setName}
             />
             <TextInput
                 style={styles.input}
                 placeholder="Child's Age"
+                placeholderTextColor={colors.text.light}
                 value={age}
                 onChangeText={setAge}
                 keyboardType="numeric"
@@ -95,11 +102,17 @@ const EditChildProfileScreen = () => {
                     ))}
                 </Picker>
             </View>
-            <Button
-                title={loading ? "Saving..." : "Save Changes"}
+            <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleEditProfile}
                 disabled={loading}
-            />
+            >
+                {loading ? (
+                    <ActivityIndicator color={colors.text.inverse} />
+                ) : (
+                    <Text style={styles.buttonText}>Save Changes</Text>
+                )}
+            </TouchableOpacity>
         </View>
     );
 };
@@ -107,40 +120,62 @@ const EditChildProfileScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#f8f8f8',
+        padding: spacing.md,
+        backgroundColor: colors.background.primary,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: spacing.lg,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginTop: spacing.sm,
         textAlign: 'center',
-        color: '#333',
+        color: colors.text.primary,
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        fontSize: 16,
         borderWidth: 1,
-        marginBottom: 12,
-        padding: 8,
-        borderRadius: 5,
-        backgroundColor: '#fff',
+        borderColor: colors.background.secondary,
+        color: colors.text.primary,
     },
     label: {
         fontSize: 16,
-        marginBottom: 5,
-        color: '#555',
+        marginBottom: spacing.xs,
+        color: colors.text.secondary,
+        fontWeight: '600',
     },
     pickerContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        borderColor: 'gray',
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.md,
+        borderColor: colors.background.secondary,
         borderWidth: 1,
-        marginBottom: 20,
+        marginBottom: spacing.lg,
     },
     picker: {
         height: 50,
         width: '100%',
+        color: colors.text.primary,
+    },
+    button: {
+        backgroundColor: colors.primary,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        alignItems: 'center',
+        ...shadows.md,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
+    },
+    buttonText: {
+        color: colors.text.inverse,
+        fontSize: 18,
+        fontWeight: '600',
     },
 });
 

@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
 import ReadingProgressBar from '../components/ReadingProgressBar';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows } from '../theme';
 
 interface Achievement {
@@ -301,6 +302,8 @@ const AchievementsScreen = () => {
                     }
                 />
             )}
+
+            <BottomNavBar />
 
             {/* Achievement Detail Modal */}
             <Modal visible={showModal} transparent animationType="fade">

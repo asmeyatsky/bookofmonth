@@ -6,7 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import HomeScreen from './src/screens/HomeScreen';
 import LoginScreen from './src/screens/LoginScreen';
-import RegistrationScreen from './src/screens/RegistrationScreen';
+
 import BookmarksScreen from './src/screens/BookmarksScreen';
 import ChildProfileListScreen from './src/screens/ChildProfileListScreen';
 import AddChildProfileScreen from './src/screens/AddChildProfileScreen';
@@ -83,7 +83,6 @@ const AppNavigator = () => {
                 component={HomeScreen}
                 options={{ headerShown: false }}
             />
-            <Stack.Screen name="Register" component={RegistrationScreen} />
             <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
             <Stack.Screen
                 name="ChildProfileList"
@@ -147,7 +146,7 @@ const linking = {
         screens: {
             Login: 'login',
             Home: '',
-            Register: 'register',
+
             Bookmarks: 'bookmarks',
             ChildProfileList: 'child-profiles',
             AddChildProfile: 'child-profiles/add',

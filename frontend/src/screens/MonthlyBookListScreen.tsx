@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService } from '../services/ApiService';
 import { useAuth } from '../context/AuthContext';
 import ReadingProgressBar from '../components/ReadingProgressBar';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 interface MonthlyBook {
@@ -215,6 +216,7 @@ const MonthlyBookListScreen = () => {
                     ) : null}
                 />
             )}
+            <BottomNavBar />
         </View>
     );
 };

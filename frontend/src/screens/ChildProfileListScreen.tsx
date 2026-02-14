@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Button, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
+import { colors, spacing, borderRadius, shadows, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 const ChildProfileListScreen = () => {
     const [childProfiles, setChildProfiles] = useState<any[]>([]);
@@ -61,7 +62,6 @@ const ChildProfileListScreen = () => {
                     onPress: async () => {
                         try {
                             await apiService.deleteChildProfile(profileId);
-                            Alert.alert("Success", "Child profile deleted successfully.");
                             setChildProfiles(prev => prev.filter(p => p.id !== profileId));
                         } catch (error: any) {
                             if (__DEV__) console.error("Error deleting child profile:", error);
@@ -75,49 +75,72 @@ const ChildProfileListScreen = () => {
     };
 
     if (loading) {
-        return <ActivityIndicator size="large" style={styles.loader} />;
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
     }
 
     if (!isAuthenticated) {
         return (
             <View style={styles.container}>
-                <Text style={styles.emptyMessage}>Please log in to manage child profiles.</Text>
+                <View style={styles.emptyContainer}>
+                    <Icon name="lock" size={60} color={colors.text.light} />
+                    <Text style={styles.emptyTitle}>Login Required</Text>
+                    <Text style={styles.emptyText}>Please log in to manage child profiles.</Text>
+                </View>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Child Profiles</Text>
             {childProfiles.length === 0 ? (
-                <Text style={styles.emptyMessage}>No child profiles found.</Text>
+                <View style={styles.emptyContainer}>
+                    <Icon name="child" size={60} color={colors.text.light} />
+                    <Text style={styles.emptyTitle}>No Child Profiles</Text>
+                    <Text style={styles.emptyText}>Add a child profile to get started.</Text>
+                </View>
             ) : (
                 <FlatList
                     data={childProfiles}
                     keyExtractor={item => item.id.toString()}
                     renderItem={({ item }) => (
                         <View style={styles.profileItem}>
-                            <Text style={styles.profileName}>
-                                {item.name} (Age: {item.age}, Level: {item.reading_level})
-                            </Text>
+                            <View style={[styles.avatar, { backgroundColor: getReadingLevelColor(item.reading_level) }]}>
+                                <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
+                            </View>
+                            <View style={styles.profileInfo}>
+                                <Text style={styles.profileName}>{item.name}</Text>
+                                <Text style={styles.profileDetail}>Age {item.age} · {getReadingLevelDisplay(item.reading_level)}</Text>
+                            </View>
                             <View style={styles.profileActions}>
                                 <TouchableOpacity
+                                    style={styles.actionBtn}
                                     onPress={() => navigation.navigate('EditChildProfile' as never, { profile: item } as never)}
                                 >
-                                    <Icon name="edit" size={20} color="#007bff" style={styles.actionIcon} />
+                                    <Icon name="edit" size={18} color={colors.secondary} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => deleteChildProfile(item.id)}>
-                                    <Icon name="trash" size={20} color="#dc3545" />
+                                <TouchableOpacity
+                                    style={styles.actionBtn}
+                                    onPress={() => deleteChildProfile(item.id)}
+                                >
+                                    <Icon name="trash" size={18} color={colors.status.error} />
                                 </TouchableOpacity>
                             </View>
                         </View>
                     )}
+                    contentContainerStyle={styles.listContent}
                 />
             )}
-            <Button
-                title="Add New Child Profile"
+            <TouchableOpacity
+                style={styles.addButton}
                 onPress={() => navigation.navigate('AddChildProfile' as never)}
-            />
+            >
+                <Icon name="plus" size={16} color={colors.text.inverse} />
+                <Text style={styles.addButtonText}>Add New Child Profile</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -125,53 +148,92 @@ const ChildProfileListScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: colors.background.primary,
     },
-    title: {
-        fontSize: 24,
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background.primary,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    emptyTitle: {
+        fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-        color: '#333',
+        color: colors.text.primary,
+        marginTop: spacing.md,
     },
-    emptyMessage: {
-        textAlign: 'center',
-        marginTop: 50,
+    emptyText: {
         fontSize: 16,
-        color: '#666',
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: spacing.sm,
+    },
+    listContent: {
+        padding: spacing.md,
     },
     profileItem: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 10,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-        elevation: 2,
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
+        marginBottom: spacing.sm,
+        ...shadows.sm,
+    },
+    avatar: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    avatarText: {
+        color: colors.text.inverse,
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    profileInfo: {
+        flex: 1,
     },
     profileName: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#555',
-        flexShrink: 1,
+        color: colors.text.primary,
+    },
+    profileDetail: {
+        fontSize: 14,
+        color: colors.text.secondary,
+        marginTop: 2,
     },
     profileActions: {
         flexDirection: 'row',
+        gap: spacing.sm,
+    },
+    actionBtn: {
+        padding: spacing.sm,
+    },
+    addButton: {
+        flexDirection: 'row',
         alignItems: 'center',
-    },
-    actionIcon: {
-        marginRight: 15,
-    },
-    loader: {
-        flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: colors.primary,
+        margin: spacing.md,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        gap: spacing.sm,
+        ...shadows.md,
+    },
+    addButtonText: {
+        color: colors.text.inverse,
+        fontWeight: '600',
+        fontSize: 16,
     },
 });
 

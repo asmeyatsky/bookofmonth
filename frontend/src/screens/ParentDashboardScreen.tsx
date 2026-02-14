@@ -16,6 +16,7 @@ import { apiService } from '../services/ApiService';
 import StreakDisplay from '../components/StreakDisplay';
 import ReadingProgressBar from '../components/ReadingProgressBar';
 import CategoryBadge from '../components/CategoryBadge';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 interface ChildStats {
@@ -153,8 +154,9 @@ const ParentDashboardScreen = () => {
     const selectedChild = childStats[selectedChildIndex];
 
     return (
+        <View style={styles.container}>
         <ScrollView
-            style={styles.container}
+            style={{ flex: 1 }}
             contentContainerStyle={styles.contentContainer}
             refreshControl={
                 <RefreshControl
@@ -360,6 +362,8 @@ const ParentDashboardScreen = () => {
                 </View>
             </View>
         </ScrollView>
+        <BottomNavBar />
+        </View>
     );
 };
 

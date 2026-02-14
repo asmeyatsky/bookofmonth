@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 interface Props {
     children: ReactNode;
@@ -45,29 +46,30 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
-        backgroundColor: '#f5f5f5',
+        padding: spacing.lg,
+        backgroundColor: colors.background.primary,
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 10,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
     message: {
         fontSize: 14,
-        color: '#666',
+        color: colors.text.secondary,
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: spacing.lg,
     },
     button: {
-        backgroundColor: '#007AFF',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
+        backgroundColor: colors.primary,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.md,
+        ...shadows.md,
     },
     buttonText: {
-        color: '#fff',
+        color: colors.text.inverse,
         fontWeight: '600',
     },
 });

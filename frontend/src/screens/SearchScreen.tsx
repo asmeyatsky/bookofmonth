@@ -15,6 +15,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService } from '../services/ApiService';
 import { useAuth } from '../context/AuthContext';
 import CategoryBadge from '../components/CategoryBadge';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 const SearchScreen = () => {
@@ -243,6 +244,7 @@ const SearchScreen = () => {
                     showsVerticalScrollIndicator={false}
                 />
             )}
+            <BottomNavBar />
         </View>
     );
 };

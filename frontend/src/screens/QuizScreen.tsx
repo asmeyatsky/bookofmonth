@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Button, Alert, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, FlatList } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService } from '../services/ApiService';
 import { authService } from '../services/AuthService';
+import { colors, spacing, borderRadius, shadows } from '../theme';
 
 interface Question {
     id: string;
@@ -108,13 +110,21 @@ const QuizScreen = () => {
     };
 
     if (loading) {
-        return <ActivityIndicator size="large" style={styles.loader} />;
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
     }
 
     if (!quiz) {
         return (
             <View style={styles.container}>
-                <Text style={styles.emptyMessage}>No quiz available for this book yet.</Text>
+                <View style={styles.emptyContainer}>
+                    <Icon name="question-circle" size={60} color={colors.text.light} />
+                    <Text style={styles.emptyTitle}>No Quiz Available</Text>
+                    <Text style={styles.emptyText}>No quiz available for this book yet.</Text>
+                </View>
             </View>
         );
     }
@@ -144,23 +154,33 @@ const QuizScreen = () => {
                                     ]}
                                     onPress={() => !showResults && handleAnswerSelection(question.id, option)}
                                 >
-                                    <Text style={styles.optionText}>{option}</Text>
+                                    <Text style={[
+                                        styles.optionText,
+                                        selectedAnswers[question.id] === option && styles.selectedOptionText,
+                                    ]}>{option}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
                     );
                 }}
+                contentContainerStyle={styles.listContent}
             />
             {!showResults ? (
-                <Button
-                    title={submitting ? "Submitting..." : "Submit Quiz"}
+                <TouchableOpacity
+                    style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
                     onPress={handleSubmitQuiz}
                     disabled={submitting}
-                />
+                >
+                    <Text style={styles.submitButtonText}>
+                        {submitting ? "Submitting..." : "Submit Quiz"}
+                    </Text>
+                </TouchableOpacity>
             ) : (
-                <View>
+                <View style={styles.resultsContainer}>
                     <Text style={styles.resultsText}>Your Score: {displayScore} / {displayTotal}</Text>
-                    <Button title="Go Back" onPress={() => navigation.goBack()} />
+                    <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+                        <Text style={styles.backBtnText}>Go Back</Text>
+                    </TouchableOpacity>
                 </View>
             )}
         </View>
@@ -170,71 +190,118 @@ const QuizScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: colors.background.primary,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background.primary,
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: colors.text.primary,
+        marginTop: spacing.md,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: spacing.sm,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginVertical: spacing.md,
         textAlign: 'center',
-        color: '#333',
+        color: colors.text.primary,
     },
-    loader: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyMessage: {
-        textAlign: 'center',
-        marginTop: 50,
-        fontSize: 16,
-        color: '#666',
+    listContent: {
+        padding: spacing.md,
     },
     questionContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 15,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1.41,
-        elevation: 2,
+        backgroundColor: colors.background.card,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        ...shadows.sm,
     },
     questionText: {
         fontSize: 18,
         fontWeight: '600',
-        marginBottom: 10,
-        color: '#333',
+        marginBottom: spacing.sm,
+        color: colors.text.primary,
     },
     optionButton: {
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 5,
-        backgroundColor: '#e0e0e0',
-        marginBottom: 8,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.background.secondary,
+        marginBottom: spacing.sm,
     },
     selectedOption: {
-        backgroundColor: '#a0d4ff',
+        backgroundColor: colors.secondary,
+    },
+    selectedOptionText: {
+        color: colors.text.inverse,
     },
     correctOption: {
         backgroundColor: '#d4edda',
+        borderWidth: 1,
+        borderColor: colors.status.success,
     },
     incorrectOption: {
         backgroundColor: '#f8d7da',
+        borderWidth: 1,
+        borderColor: colors.status.error,
     },
     optionText: {
         fontSize: 16,
-        color: '#333',
+        color: colors.text.primary,
+    },
+    submitButton: {
+        backgroundColor: colors.primary,
+        margin: spacing.md,
+        padding: spacing.md,
+        borderRadius: borderRadius.md,
+        alignItems: 'center',
+        ...shadows.md,
+    },
+    submitButtonDisabled: {
+        opacity: 0.7,
+    },
+    submitButtonText: {
+        color: colors.text.inverse,
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    resultsContainer: {
+        padding: spacing.md,
+        alignItems: 'center',
     },
     resultsText: {
         fontSize: 20,
         fontWeight: 'bold',
-        textAlign: 'center',
-        marginTop: 20,
-        marginBottom: 10,
-        color: '#007bff',
+        color: colors.primary,
+        marginBottom: spacing.md,
+    },
+    backBtn: {
+        backgroundColor: colors.secondary,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.md,
+    },
+    backBtnText: {
+        color: colors.text.inverse,
+        fontWeight: '600',
+        fontSize: 16,
     },
 });
 
