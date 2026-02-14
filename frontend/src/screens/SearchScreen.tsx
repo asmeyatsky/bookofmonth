@@ -61,8 +61,10 @@ const SearchScreen = () => {
     };
 
     const handleNewsEventPress = (item: any) => {
-        // Navigate to home to view the full story
-        navigation.navigate('Home' as never);
+        navigation.navigate('Home' as never, { 
+            selectedStoryId: item.id,
+            scrollToStory: true 
+        } as never);
     };
 
     const handleMonthlyBookPress = (item: any) => {

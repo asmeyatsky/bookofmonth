@@ -1,22 +1,41 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { useAuth } from '../context/AuthContext';
 import { colors, spacing, shadows } from '../theme';
-
-const tabs = [
-    { name: 'Home', icon: 'home', label: 'Home', color: colors.primary },
-    { name: 'Bookmarks', icon: 'bookmark', label: 'Bookmarks', color: colors.accent },
-    { name: 'MonthlyBookList', icon: 'book', label: 'Books', color: colors.primary },
-    { name: 'Search', icon: 'search', label: 'Search', color: colors.secondary },
-    { name: 'Achievements', icon: 'trophy', label: 'Awards', color: colors.achievements.gold },
-    { name: 'ParentDashboard', icon: 'users', label: 'Parents', color: colors.categories.arts },
-];
 
 const BottomNavBar = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const currentRoute = route.name;
+    const { isAuthenticated } = useAuth();
+
+    const allTabs = [
+        { name: 'Home', icon: 'home', label: 'Home', color: colors.primary, requiresAuth: false },
+        { name: 'Bookmarks', icon: 'bookmark', label: 'Bookmarks', color: colors.accent, requiresAuth: true },
+        { name: 'MonthlyBookList', icon: 'book', label: 'Books', color: colors.primary, requiresAuth: false },
+        { name: 'Search', icon: 'search', label: 'Search', color: colors.secondary, requiresAuth: false },
+        { name: 'Achievements', icon: 'trophy', label: 'Awards', color: colors.achievements.gold, requiresAuth: true },
+        { name: 'ParentDashboard', icon: 'users', label: 'Parents', color: colors.categories.arts, requiresAuth: true },
+    ];
+
+    const tabs = allTabs.filter(tab => !tab.requiresAuth || isAuthenticated);
+
+    const handleTabPress = (tabName: string, requiresAuth: boolean) => {
+        if (requiresAuth && !isAuthenticated) {
+            Alert.alert(
+                "Login Required",
+                "Please log in to access this feature.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Log In", onPress: () => navigation.navigate('Login' as never) }
+                ]
+            );
+            return;
+        }
+        navigation.navigate(tabName as never);
+    };
 
     return (
         <View style={styles.container}>
@@ -26,7 +45,7 @@ const BottomNavBar = () => {
                     <TouchableOpacity
                         key={tab.name}
                         style={styles.tab}
-                        onPress={() => navigation.navigate(tab.name as never)}
+                        onPress={() => handleTabPress(tab.name, tab.requiresAuth)}
                     >
                         <Icon
                             name={tab.icon}

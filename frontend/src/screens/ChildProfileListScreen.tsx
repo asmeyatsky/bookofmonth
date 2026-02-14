@@ -4,6 +4,7 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 const ChildProfileListScreen = () => {
@@ -141,6 +142,7 @@ const ChildProfileListScreen = () => {
                 <Icon name="plus" size={16} color={colors.text.inverse} />
                 <Text style={styles.addButtonText}>Add New Child Profile</Text>
             </TouchableOpacity>
+            <BottomNavBar />
         </View>
     );
 };

@@ -127,7 +127,7 @@ const MonthlyBookScreen = () => {
 
     const handleTakeQuiz = () => {
         if (book?.quiz) {
-            navigation.navigate('Quiz' as never, { quizId: book.quiz.id, bookId: book.id } as never);
+            navigation.navigate('Quiz' as never, { quizId: book.quiz.id, bookId: book.id, returnTo: 'book' } as never);
         } else {
             Alert.alert('Quiz Not Available', 'The quiz for this book is not available yet.');
         }

@@ -5,6 +5,7 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/ApiService';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows } from '../theme';
 
 enum AgeRange {
@@ -110,6 +111,7 @@ const AddChildProfileScreen = () => {
                     <Text style={styles.buttonText}>Add Profile</Text>
                 )}
             </TouchableOpacity>
+            <BottomNavBar />
         </View>
     );
 };

@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { apiService } from '../services/ApiService';
 import { authService } from '../services/AuthService';
+import BottomNavBar from '../components/BottomNavBar';
 import { colors, spacing, borderRadius, shadows } from '../theme';
 
 interface Question {
@@ -41,7 +42,7 @@ const QuizScreen = () => {
     const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null);
     const navigation = useNavigation();
     const route = useRoute();
-    const { bookId } = route.params as { bookId: string };
+    const { bookId, quizId, returnTo } = route.params as { bookId?: string; quizId?: string; returnTo?: string };
 
     useEffect(() => {
         apiService.getQuizzes()
@@ -178,11 +179,23 @@ const QuizScreen = () => {
             ) : (
                 <View style={styles.resultsContainer}>
                     <Text style={styles.resultsText}>Your Score: {displayScore} / {displayTotal}</Text>
-                    <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-                        <Text style={styles.backBtnText}>Go Back</Text>
+                    <TouchableOpacity 
+                        style={styles.backBtn} 
+                        onPress={() => {
+                            if (returnTo === 'book' && bookId) {
+                                navigation.navigate('MonthlyBook' as never, { bookId } as never);
+                            } else {
+                                navigation.goBack();
+                            }
+                        }}
+                    >
+                        <Text style={styles.backBtnText}>
+                            {returnTo === 'book' ? 'Back to Book' : 'Go Back'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
             )}
+            <BottomNavBar />
         </View>
     );
 };

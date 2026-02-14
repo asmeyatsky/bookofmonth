@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet, ActivityIndicator, Modal, Alert, TouchableOpacity, RefreshControl, Platform, Image, Dimensions } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { ttsService } from '../services/TtsService';
@@ -41,9 +41,13 @@ const HomeScreen = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { isAuthenticated, user, logout, activeChildProfile, refreshChildProfiles } = useAuth();
+    const flatListRef = useRef<FlatList<NewsEvent>>(null);
 
     const [browsingAsGuest, setBrowsingAsGuest] = useState(
         !!(route.params as any)?.browseAsGuest
+    );
+    const [scrollToStoryId, setScrollToStoryId] = useState<string | null>(
+        (route.params as any)?.scrollToStory ? (route.params as any)?.selectedStoryId : null
     );
 
     useFocusEffect(
@@ -67,6 +71,16 @@ const HomeScreen = () => {
                 : undefined;
             const newsData = await apiService.getNewsEvents(filters);
             setNewsEvents(newsData.results || []);
+
+            // Scroll to selected story if coming from search
+            if (scrollToStoryId) {
+                setTimeout(() => {
+                    const index = newsData.results?.findIndex((e: NewsEvent) => e.id === scrollToStoryId) ?? -1;
+                    if (index >= 0) {
+                        flatListRef.current?.scrollToIndex({ index, animated: true });
+                    }
+                }, 300);
+            }
 
             // Fetch user-specific data if authenticated
             if (isAuthenticated) {
@@ -460,10 +474,16 @@ const HomeScreen = () => {
                 </View>
             ) : (
                 <FlatList
+                    ref={flatListRef}
                     style={{ flex: 1 }}
                     data={newsEvents}
                     keyExtractor={item => item.id.toString()}
                     renderItem={({ item }) => renderStoryCard(item)}
+                    onScrollToIndexFailed={(info) => {
+                        setTimeout(() => {
+                            flatListRef.current?.scrollToIndex({ index: info.index, animated: true });
+                        }, 100);
+                    }}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
                         <RefreshControl

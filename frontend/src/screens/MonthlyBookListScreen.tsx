@@ -82,9 +82,9 @@ const MonthlyBookListScreen = () => {
 
     const handleTakeQuiz = (bookId: string, quizId?: string) => {
         if (quizId) {
-            navigation.navigate('Quiz' as never, { quizId, bookId } as never);
+            navigation.navigate('Quiz' as never, { quizId, bookId, returnTo: 'book' } as never);
         } else {
-            navigation.navigate('Quiz' as never, { bookId } as never);
+            navigation.navigate('Quiz' as never, { bookId, returnTo: 'book' } as never);
         }
     };
 
