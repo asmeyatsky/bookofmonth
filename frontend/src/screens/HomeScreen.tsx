@@ -308,10 +308,9 @@ const HomeScreen = () => {
     );
 
     if (Platform.OS === 'web') {
-        // Web: single ScrollView, everything flows top-to-bottom, no flex tricks
+        // Web: ScrollView as root element (View wrapper kills scrolling due to overflow:hidden)
         return (
-            <View style={styles.container}>
-                <ScrollView>
+            <ScrollView style={styles.container}>
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
@@ -378,7 +377,6 @@ const HomeScreen = () => {
                     )}
 
                     <BottomNavBar />
-                </ScrollView>
 
                 <Modal visible={isImageViewerVisible} transparent={true}>
                     <TouchableOpacity
@@ -395,7 +393,7 @@ const HomeScreen = () => {
                         )}
                     </TouchableOpacity>
                 </Modal>
-            </View>
+            </ScrollView>
         );
     }
 
