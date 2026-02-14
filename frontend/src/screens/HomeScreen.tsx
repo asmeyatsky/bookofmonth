@@ -307,46 +307,103 @@ const HomeScreen = () => {
         />
     );
 
-    const storiesContent = newsEvents.length === 0 ? (
-        <View style={styles.emptyContainer}>
-            <Icon name="book" size={60} color={colors.text.light} />
-            <Text style={styles.emptyTitle}>No Stories Yet</Text>
-            <Text style={styles.emptyText}>
-                {activeChildProfile
-                    ? `No stories available for ${activeChildProfile.name}'s reading level yet.`
-                    : 'Check back soon for new stories!'}
-            </Text>
-        </View>
-    ) : Platform.OS === 'web' ? (
-        <View style={{ flex: 1, minHeight: 0, overflow: 'auto' as any }}>
-            <View style={styles.listContent}>
-                {newsEvents.map(renderStoryCard)}
-            </View>
-        </View>
-    ) : (
-        <FlatList
-            style={{ flex: 1 }}
-            data={newsEvents}
-            keyExtractor={item => item.id.toString()}
-            renderItem={({ item }) => renderStoryCard(item)}
-            contentContainerStyle={styles.listContent}
-            refreshControl={
-                <RefreshControl
-                    refreshing={refreshing}
-                    onRefresh={onRefresh}
-                    colors={[colors.primary]}
-                    tintColor={colors.primary}
-                />
-            }
-        />
-    );
+    if (Platform.OS === 'web') {
+        // Web: single ScrollView, everything flows top-to-bottom, no flex tricks
+        return (
+            <View style={styles.container}>
+                <ScrollView>
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <View style={styles.headerLeft}>
+                            {!isAuthenticated && browsingAsGuest && (
+                                <TouchableOpacity
+                                    style={styles.homeButton}
+                                    onPress={() => setBrowsingAsGuest(false)}
+                                >
+                                    <Icon name="arrow-left" size={18} color={colors.primary} />
+                                </TouchableOpacity>
+                            )}
+                            <View>
+                                <Text style={styles.title}>Daily Stories</Text>
+                                {activeChildProfile && (
+                                    <Text style={styles.subtitle}>
+                                        Reading as {activeChildProfile.name}
+                                    </Text>
+                                )}
+                            </View>
+                        </View>
+                        <View style={styles.headerRight}>
+                            {isAuthenticated ? (
+                                <>
+                                    <ProfileSwitcher compact onProfileChange={handleProfileChange} />
+                                    <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+                                        <Icon name="sign-out" size={18} color={colors.text.secondary} />
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <TouchableOpacity
+                                    onPress={() => navigation.navigate('Login' as never)}
+                                    style={styles.loginButton}
+                                >
+                                    <Text style={styles.loginText}>Log In</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
 
+                    {isAuthenticated && currentStreak > 0 && (
+                        <View style={styles.streakContainer}>
+                            <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} size="small" />
+                        </View>
+                    )}
+
+                    {isAuthenticated && (
+                        <ProfileSwitcher onProfileChange={handleProfileChange} />
+                    )}
+
+                    {newsEvents.length === 0 ? (
+                        <View style={styles.emptyContainer}>
+                            <Icon name="book" size={60} color={colors.text.light} />
+                            <Text style={styles.emptyTitle}>No Stories Yet</Text>
+                            <Text style={styles.emptyText}>
+                                {activeChildProfile
+                                    ? `No stories available for ${activeChildProfile.name}'s reading level yet.`
+                                    : 'Check back soon for new stories!'}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={styles.listContent}>
+                            {newsEvents.map(renderStoryCard)}
+                        </View>
+                    )}
+
+                    <BottomNavBar />
+                </ScrollView>
+
+                <Modal visible={isImageViewerVisible} transparent={true}>
+                    <TouchableOpacity
+                        style={styles.webImageViewerOverlay}
+                        activeOpacity={1}
+                        onPress={() => setIsImageViewerVisible(false)}
+                    >
+                        {currentImage.length > 0 && (
+                            <Image
+                                source={{ uri: currentImage[0].url }}
+                                style={styles.webImageViewerImage}
+                                resizeMode="contain"
+                            />
+                        )}
+                    </TouchableOpacity>
+                </Modal>
+            </View>
+        );
+    }
+
+    // Native: FlatList with fixed header and bottom nav
     return (
         <View style={styles.container}>
-            {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    {/* Home button — for guests, return to welcome */}
                     {!isAuthenticated && browsingAsGuest && (
                         <TouchableOpacity
                             style={styles.homeButton}
@@ -383,52 +440,53 @@ const HomeScreen = () => {
                 </View>
             </View>
 
-            {/* Streak Display (if authenticated) */}
             {isAuthenticated && currentStreak > 0 && (
                 <View style={styles.streakContainer}>
-                    <StreakDisplay
-                        currentStreak={currentStreak}
-                        longestStreak={longestStreak}
-                        size="small"
-                    />
+                    <StreakDisplay currentStreak={currentStreak} longestStreak={longestStreak} size="small" />
                 </View>
             )}
 
-            {/* Profile Switcher (full version if authenticated) */}
             {isAuthenticated && (
                 <ProfileSwitcher onProfileChange={handleProfileChange} />
             )}
 
-            {/* News Events List */}
-            {storiesContent}
+            {newsEvents.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                    <Icon name="book" size={60} color={colors.text.light} />
+                    <Text style={styles.emptyTitle}>No Stories Yet</Text>
+                    <Text style={styles.emptyText}>
+                        {activeChildProfile
+                            ? `No stories available for ${activeChildProfile.name}'s reading level yet.`
+                            : 'Check back soon for new stories!'}
+                    </Text>
+                </View>
+            ) : (
+                <FlatList
+                    style={{ flex: 1 }}
+                    data={newsEvents}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={({ item }) => renderStoryCard(item)}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={[colors.primary]}
+                            tintColor={colors.primary}
+                        />
+                    }
+                />
+            )}
 
-            {/* Navigation Bar */}
             <BottomNavBar />
 
-            {/* Image Viewer Modal */}
             <Modal visible={isImageViewerVisible} transparent={true}>
-                {Platform.OS === 'web' ? (
-                    <TouchableOpacity
-                        style={styles.webImageViewerOverlay}
-                        activeOpacity={1}
-                        onPress={() => setIsImageViewerVisible(false)}
-                    >
-                        {currentImage.length > 0 && (
-                            <Image
-                                source={{ uri: currentImage[0].url }}
-                                style={styles.webImageViewerImage}
-                                resizeMode="contain"
-                            />
-                        )}
-                    </TouchableOpacity>
-                ) : (
-                    ImageViewer && (
-                        <ImageViewer
-                            imageUrls={currentImage}
-                            enableSwipeDown={true}
-                            onCancel={() => setIsImageViewerVisible(false)}
-                        />
-                    )
+                {ImageViewer && (
+                    <ImageViewer
+                        imageUrls={currentImage}
+                        enableSwipeDown={true}
+                        onCancel={() => setIsImageViewerVisible(false)}
+                    />
                 )}
             </Modal>
         </View>
@@ -439,7 +497,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
-        ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     loadingContainer: {
         flex: 1,
