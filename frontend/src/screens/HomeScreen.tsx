@@ -324,18 +324,21 @@ const HomeScreen = () => {
     if (Platform.OS === 'web') {
         // Web: ScrollView as root element (View wrapper kills scrolling due to overflow:hidden)
         return (
-            <ScrollView style={styles.container}>
+            <View style={styles.webContainer}>
+                <ScrollView 
+                    style={styles.container} 
+                    contentContainerStyle={styles.webContentContainer}
+                    showsVerticalScrollIndicator={true}
+                >
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
-                            {!isAuthenticated && browsingAsGuest && (
-                                <TouchableOpacity
-                                    style={styles.homeButton}
-                                    onPress={() => setBrowsingAsGuest(false)}
-                                >
-                                    <Icon name="arrow-left" size={18} color={colors.primary} />
-                                </TouchableOpacity>
-                            )}
+                            <TouchableOpacity
+                                style={styles.homeButton}
+                                onPress={() => navigation.navigate('Home' as never)}
+                            >
+                                <Icon name="home" size={18} color={colors.primary} />
+                            </TouchableOpacity>
                             <View>
                                 <Text style={styles.title}>Daily Stories</Text>
                                 {activeChildProfile && (
@@ -389,8 +392,9 @@ const HomeScreen = () => {
                             {newsEvents.map(renderStoryCard)}
                         </View>
                     )}
+                </ScrollView>
 
-                    <BottomNavBar />
+                <BottomNavBar />
 
                 <Modal visible={isImageViewerVisible} transparent={true}>
                     <TouchableOpacity
@@ -407,7 +411,7 @@ const HomeScreen = () => {
                         )}
                     </TouchableOpacity>
                 </Modal>
-            </ScrollView>
+            </View>
         );
     }
 
@@ -416,14 +420,12 @@ const HomeScreen = () => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
-                    {!isAuthenticated && browsingAsGuest && (
-                        <TouchableOpacity
-                            style={styles.homeButton}
-                            onPress={() => setBrowsingAsGuest(false)}
-                        >
-                            <Icon name="arrow-left" size={18} color={colors.primary} />
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                        style={styles.homeButton}
+                        onPress={() => navigation.navigate('Home' as never)}
+                    >
+                        <Icon name="home" size={18} color={colors.primary} />
+                    </TouchableOpacity>
                     <View>
                         <Text style={styles.title}>Daily Stories</Text>
                         {activeChildProfile && (
@@ -515,6 +517,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background.primary,
+    },
+    webContainer: {
+        flex: 1,
+        height: '100vh',
+        backgroundColor: colors.background.primary,
+    },
+    webContentContainer: {
+        flexGrow: 1,
+        paddingBottom: spacing.xl,
     },
     loadingContainer: {
         flex: 1,
