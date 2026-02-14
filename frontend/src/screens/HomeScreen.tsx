@@ -322,9 +322,10 @@ const HomeScreen = () => {
     );
 
     if (Platform.OS === 'web') {
-        // Web: ScrollView as root element (View wrapper kills scrolling due to overflow:hidden)
+        // Web: Use View with explicit height
+        const screenHeight = Dimensions.get('window').height;
         return (
-            <View style={styles.webContainer}>
+            <View style={{ height: screenHeight, flexDirection: 'column' }}>
                 <ScrollView 
                     style={styles.container} 
                     contentContainerStyle={styles.webContentContainer}
@@ -516,11 +517,6 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background.primary,
-    },
-    webContainer: {
-        flex: 1,
-        height: '100vh',
         backgroundColor: colors.background.primary,
     },
     webContentContainer: {
