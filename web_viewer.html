@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book of Month - Digital Book Viewer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .book-info {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .book-info h2 {
+            color: #495057;
+            margin-top: 0;
+        }
+        
+        .content-area {
+            display: flex;
+            height: 600px;
+        }
+        
+        .day-selector {
+            width: 300px;
+            background: #ffffff;
+            border-right: 1px solid #e9ecef;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .day-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        
+        .day-button:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        
+        .day-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .day-button .day-number {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .day-button .day-type {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .reading-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .day-title {
+            color: #495057;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .content-text {
+            font-size: 1.1em;
+            line-height: 1.8;
+            color: #212529;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .questions, .activities, .objectives {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .questions li, .activities li, .objectives li {
+            background: #e7f3ff;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease;
+        }
+        
+        .activities li {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        
+        .objectives li {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        
+        .questions li:hover, .activities li:hover, .objectives li:hover {
+            transform: translateX(5px);
+        }
+        
+        .news-event-indicator {
+            background: #ff4757;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 50px;
+            color: #dc3545;
+            background: #f8d7da;
+            border-radius: 10px;
+            margin: 20px;
+        }
+        
+        .parents-guide {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .parents-guide h3 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Book of Month</h1>
+            <p>Digital Reading Experience for Young Learners</p>
+        </div>
+        
+        <div class="book-info">
+            <h2 id="book-title">Loading...</h2>
+            <p id="book-meta">Loading...</p>
+        </div>
+        
+        <div class="content-area">
+            <div class="day-selector">
+                <h3>Reading Days</h3>
+                <div id="day-buttons" class="loading">
+                    Loading daily content...
+                </div>
+            </div>
+            
+            <div class="reading-content">
+                <div id="content-display" class="loading">
+                    Select a day to begin reading...
+                </div>
+            </div>
+        </div>
+        
+        <div class="parents-guide">
+            <h3>👨‍👩‍👧‍👦 Parents' Guide</h3>
+            <div id="parents-guide-content">
+                Loading parent guidance...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBook = null;
+        let currentDay = null;
+
+        async function loadMonthlyBook() {
+            try {
+                const response = await fetch('http://localhost:8000/api/assembly/monthly-books/');
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    currentBook = data.results[0];
+                    displayBookInfo();
+                    displayDaySelector();
+                    displayParentsGuide();
+                } else {
+                    showError('No monthly books found');
+                }
+            } catch (error) {
+                showError('Error loading book: ' + error.message);
+            }
+        }
+
+        function displayBookInfo() {
+            document.getElementById('book-title').textContent = currentBook.title;
+            document.getElementById('book-meta').textContent = 
+                `Month: ${currentBook.month}/${currentBook.year} | Days: ${currentBook.daily_entries.length} days of content`;
+        }
+
+        function displayDaySelector() {
+            const container = document.getElementById('day-buttons');
+            container.innerHTML = '';
+            
+            currentBook.daily_entries.forEach((day, index) => {
+                const button = document.createElement('button');
+                button.className = 'day-button';
+                button.onclick = () => selectDay(index);
+                
+                const isNewsEvent = day.type === 'news_event';
+                
+                button.innerHTML = `
+                    <div class="day-number">Day ${day.day}</div>
+                    <div class="day-type">
+                        ${day.title}
+                        ${isNewsEvent ? '<span class="news-event-indicator">📰 News</span>' : ''}
+                    </div>
+                `;
+                
+                container.appendChild(button);
+            });
+        }
+
+        function selectDay(dayIndex) {
+            currentDay = dayIndex;
+            const day = currentBook.daily_entries[dayIndex];
+            
+            // Update active button
+            document.querySelectorAll('.day-button').forEach((btn, index) => {
+                btn.classList.toggle('active', index === dayIndex);
+            });
+            
+            displayDayContent(day);
+        }
+
+        function displayDayContent(day) {
+            const container = document.getElementById('content-display');
+            
+            let contentHtml = `
+                <h2 class="day-title">${day.title}</h2>
+                ${day.topic ? `<p class="topic-tag">📖 ${day.topic}</p>` : ''}
+            `;
+            
+            // Add image if available
+            if (day.image_url) {
+                contentHtml += `
+                    <div class="image-container">
+                        <img src="${day.image_url}" alt="${day.title}" class="content-image">
+                    </div>
+                `;
+            }
+            
+            contentHtml += `
+                <div class="content-text">${day.reading_content}</div>
+            `;
+            
+            // Add fun facts if available
+            if (day.fun_facts && day.fun_facts.length > 0) {
+                contentHtml += `
+                    <div class="section">
+                        <h3>🌟 Amazing Facts</h3>
+                        <div class="facts-container">
+                            ${day.fun_facts.map(fact => `<div class="fact-card">💡 ${fact}</div>`).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (day.discussion_questions && day.discussion_questions.length > 0) {
+                contentHtml += `
+                    <div class="section">
+                        <h3>💭 Discussion Questions</h3>
+                        <ul class="questions">
+                            ${day.discussion_questions.map(q => `<li>${q}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (day.activities && day.activities.length > 0) {
+                contentHtml += `
+                    <div class="section">
+                        <h3>🎯 Activities</h3>
+                        <ul class="activities">
+                            ${day.activities.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (day.learning_objectives && day.learning_objectives.length > 0) {
+                contentHtml += `
+                    <div class="section">
+                        <h3>📚 Learning Objectives</h3>
+                        <ul class="objectives">
+                            ${day.learning_objectives.map(o => `<li>${o}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = contentHtml;
+        }
+
+        function displayParentsGuide() {
+            const container = document.getElementById('parents-guide-content');
+            if (currentBook.parents_guide) {
+                container.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${currentBook.parents_guide}</pre>`;
+            } else {
+                container.innerHTML = '<p>No parent guide available for this book.</p>';
+            }
+        }
+
+        function showError(message) {
+            document.querySelector('.container').innerHTML = `
+                <div class="error">
+                    <h3>Error</h3>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', loadMonthlyBook);
+    </script>
+</body>
+</html>
