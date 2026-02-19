@@ -19,6 +19,8 @@ class NewsEventSerializer(serializers.ModelSerializer):
             'is_verified',
             'processing_status',
             'image_url',
+            'video_url',
+            'fun_facts',
             'content_elements',
             'created_at',
             'updated_at',
@@ -32,4 +34,4 @@ class NewsEventSerializer(serializers.ModelSerializer):
 class ContentPipelineDailyEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = NewsEventModel
-        fields = ('id', 'title', 'image_url', 'discussion_questions', 'content_elements')
+        fields = ('id', 'title', 'image_url', 'video_url', 'fun_facts', 'discussion_questions', 'content_elements')

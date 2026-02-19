@@ -3,7 +3,9 @@ from datetime import datetime
 
 from content_pipeline.infrastructure.adapters.news_api_adapter import NewsAPIAdapter
 from content_pipeline.infrastructure.adapters.gemini_api_adapter import GeminiApiAdapter
-from content_pipeline.infrastructure.adapters.image_generation_adapter import ImageGenerationAdapter # New import
+from content_pipeline.infrastructure.adapters.image_generation_adapter import ImageGenerationAdapter
+from content_pipeline.infrastructure.adapters.pexels_adapter import PexelsAdapter
+from content_pipeline.infrastructure.adapters.youtube_adapter import YouTubeAdapter
 from content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
 from content_pipeline.domain.services.content_processing_service import ContentProcessingService
 from content_pipeline.application.use_cases.ingest_news_events_use_case import IngestNewsEventsUseCase
@@ -33,10 +35,17 @@ class Command(BaseCommand):
         news_aggregator = NewsAPIAdapter()
         gemini_api = GeminiApiAdapter()
         image_generation = ImageGenerationAdapter()
+        pexels = PexelsAdapter()
+        youtube = YouTubeAdapter()
         news_event_repository = DjangoNewsEventRepository()
 
-        # Initialize domain service
-        content_processing_service = ContentProcessingService(gemini_api=gemini_api, image_generation=image_generation)
+        # Initialize domain service with all adapters
+        content_processing_service = ContentProcessingService(
+            gemini_api=gemini_api,
+            image_generation=image_generation,
+            pexels=pexels,
+            youtube=youtube,
+        )
 
         # Initialize application use case
         ingest_use_case = IngestNewsEventsUseCase(

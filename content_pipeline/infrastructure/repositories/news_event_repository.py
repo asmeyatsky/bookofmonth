@@ -19,7 +19,10 @@ class DjangoNewsEventRepository(NewsEventRepositoryPort):
             age_appropriateness=AgeRange[model.age_appropriateness] if model.age_appropriateness else None,
             is_verified=model.is_verified,
             processing_status=model.processing_status,
-            image_path=model.image_path,
+            image_path=model.image_url,
+            video_url=model.video_url,
+            fun_facts=model.fun_facts if model.fun_facts else [],
+            discussion_questions=model.discussion_questions if model.discussion_questions else [],
             created_at=model.created_at,
             updated_at=model.updated_at
         )
@@ -40,9 +43,10 @@ class DjangoNewsEventRepository(NewsEventRepositoryPort):
         model.age_appropriateness = entity.age_appropriateness.name if entity.age_appropriateness else None
         model.is_verified = entity.is_verified
         model.processing_status = entity.processing_status
-        model.image_path = entity.image_path
-        # created_at and updated_at are auto_now_add and auto_now respectively in the model
-        # so they don't need to be set here for updates.
+        model.image_url = entity.image_path
+        model.video_url = entity.video_url
+        model.fun_facts = entity.fun_facts if entity.fun_facts else []
+        model.discussion_questions = entity.discussion_questions if entity.discussion_questions else []
         return model
 
     def get_by_id(self, event_id: str) -> Optional[NewsEvent]:

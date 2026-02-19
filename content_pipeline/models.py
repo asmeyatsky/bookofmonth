@@ -21,7 +21,9 @@ class NewsEventModel(models.Model):
     age_appropriateness = models.CharField(max_length=50, null=True, blank=True) # Storing AgeRange Enum value
     is_verified = models.BooleanField(default=False)
     processing_status = models.CharField(max_length=50, default="RAW")
-    image_url = models.URLField(max_length=1000, null=True, blank=True) # New field
+    image_url = models.URLField(max_length=1000, null=True, blank=True)
+    video_url = models.URLField(max_length=1000, null=True, blank=True)
+    fun_facts = ListField(default=list)
     content_elements = models.JSONField(default=None, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

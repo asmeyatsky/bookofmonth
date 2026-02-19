@@ -17,5 +17,8 @@ class NewsEvent:
     is_verified: bool = False
     processing_status: str = "RAW" # e.g., RAW, CATEGORIZED, VERIFIED, ADAPTED
     image_path: Optional[str] = None # New field for image path
+    video_url: Optional[str] = None
+    fun_facts: List[str] = field(default_factory=list)
+    discussion_questions: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)

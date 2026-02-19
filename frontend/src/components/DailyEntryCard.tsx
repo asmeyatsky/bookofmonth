@@ -11,6 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import TappableText from './TappableText';
 import CategoryBadge from './CategoryBadge';
+import VideoPlayer from './VideoPlayer';
 import { colors, spacing, borderRadius, shadows, getTypographyForLevel, getReadingLevelDisplay, getReadingLevelColor } from '../theme';
 
 interface NewsEvent {
@@ -18,6 +19,8 @@ interface NewsEvent {
     title: string;
     raw_content: string;
     image_url?: string;
+    video_url?: string;
+    fun_facts?: string[];
     category?: string;
     age_appropriateness?: string;
     extracted_facts?: string[];
@@ -49,10 +52,12 @@ const DailyEntryCard: React.FC<DailyEntryCardProps> = ({
     style,
 }) => {
     const [showFacts, setShowFacts] = useState(false);
+    const [showFunFacts, setShowFunFacts] = useState(false);
     const [showQuestions, setShowQuestions] = useState(false);
     const typography = getTypographyForLevel(readingLevel);
 
     const extractedFacts = event.extracted_facts || [];
+    const funFacts = event.fun_facts || [];
     const discussionQuestions = event.discussion_questions || [];
 
     return (
@@ -111,6 +116,11 @@ const DailyEntryCard: React.FC<DailyEntryCardProps> = ({
                 </TouchableWithoutFeedback>
             )}
 
+            {/* YouTube Video */}
+            {event.video_url && (
+                <VideoPlayer videoUrl={event.video_url} />
+            )}
+
             {/* Main content */}
             <View style={styles.contentContainer}>
                 <TappableText content={event.raw_content} />
@@ -138,6 +148,38 @@ const DailyEntryCard: React.FC<DailyEntryCardProps> = ({
                             {extractedFacts.map((fact, index) => (
                                 <View key={index} style={styles.factItem}>
                                     <Icon name="star" size={12} color={colors.accent} style={styles.factIcon} />
+                                    <Text style={[styles.factText, { fontSize: typography.body }]}>{fact}</Text>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+                </View>
+            )}
+
+            {/* Fun Facts Section */}
+            {funFacts.length > 0 && (
+                <View style={styles.expandableSection}>
+                    <TouchableOpacity
+                        style={styles.expandableHeader}
+                        onPress={() => setShowFunFacts(!showFunFacts)}
+                    >
+                        <View style={styles.expandableHeaderContent}>
+                            <Icon name="rocket" size={18} color={colors.accent} />
+                            <Text style={styles.expandableTitle}>Mind-Blowing Facts!</Text>
+                        </View>
+                        <Icon
+                            name={showFunFacts ? 'chevron-up' : 'chevron-down'}
+                            size={14}
+                            color={colors.text.secondary}
+                        />
+                    </TouchableOpacity>
+                    {showFunFacts && (
+                        <View style={styles.expandableContent}>
+                            {funFacts.map((fact, index) => (
+                                <View key={index} style={styles.funFactItem}>
+                                    <Text style={styles.funFactEmoji}>
+                                        {['🤯', '😮', '🌟', '🔥', '💡'][index % 5]}
+                                    </Text>
                                     <Text style={[styles.factText, { fontSize: typography.body }]}>{fact}</Text>
                                 </View>
                             ))}
@@ -303,6 +345,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-start',
         marginBottom: spacing.sm,
+    },
+    funFactItem: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: spacing.sm,
+        backgroundColor: colors.background.secondary,
+        padding: spacing.sm,
+        borderRadius: borderRadius.md,
+    },
+    funFactEmoji: {
+        fontSize: 18,
+        marginRight: spacing.sm,
+        marginTop: 1,
     },
     factIcon: {
         marginTop: 4,

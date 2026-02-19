@@ -45,21 +45,32 @@ class IngestNewsEventsUseCase:
                 published_at=article.published_at,
             )
 
+            # Categorize using Gemini AI (not keyword matching)
             processed_event = self.content_processing_service.categorize_event(news_event)
-            processed_event = self.content_processing_service.determine_age_appropriateness(processed_event, target_age_level)
+
+            # Adapt content for age — this REWRITES raw_content with engaging story
+            processed_event = self.content_processing_service.adapt_content_for_age(processed_event, target_age_level)
+
+            # Extract educational facts
             processed_event = self.content_processing_service.extract_facts(processed_event)
             processed_event = self.content_processing_service.verify_facts(processed_event)
-            
-            image_path = self.content_processing_service.generate_image_for_event(processed_event)
-            processed_event = replace(processed_event, image_path=image_path)
 
-            if processed_event.extracted_facts:
-                for fact in processed_event.extracted_facts:
-                    educational_context = self.content_processing_service.generate_educational_context_for_fact(fact)
-                    print(f"Generated context for '{fact.content}': {educational_context}")
-            
+            # Generate fun facts (separate from extracted educational facts)
+            processed_event = self.content_processing_service.extract_fun_facts(processed_event)
+
+            # Generate discussion/quiz questions and SAVE them
             questions = self.content_processing_service.generate_comprehension_questions(processed_event.raw_content)
-            print(f"Generated questions: {questions}")
+            processed_event = replace(processed_event, discussion_questions=questions)
+
+            # Find real image from Pexels
+            image_url = self.content_processing_service.find_image(processed_event)
+            if image_url:
+                processed_event = replace(processed_event, image_path=image_url)
+
+            # Find YouTube video
+            video_url = self.content_processing_service.find_video(processed_event)
+            if video_url:
+                processed_event = replace(processed_event, video_url=video_url)
 
             if not self.content_processing_service.ensure_timeliness(processed_event, max_age_days=days_ago + 1):
                 print(f"Event {processed_event.title} is too old after processing, skipping.")
