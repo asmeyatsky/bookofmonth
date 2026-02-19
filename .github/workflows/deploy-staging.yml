@@ -108,6 +108,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_BASE_URL: ${{ needs.deploy-api.outputs.service_url }}/api
+          VITE_BASE_PATH: /bookofmonth-staging/
         run: npm run build
 
       - name: Deploy to Firebase Hosting
