@@ -29,7 +29,10 @@ function jsxInNodeModules() {
   };
 }
 
+const basePath = process.env.VITE_BASE_PATH || '/';
+
 export default defineConfig({
+  base: basePath,
   define: {
     global: 'globalThis',
     __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
@@ -66,6 +69,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: basePath !== '/' ? `dist/${basePath.replace(/^\/|\/$/g, '')}` : 'dist',
     commonjsOptions: {
       transformMixedEsModules: true,
     },

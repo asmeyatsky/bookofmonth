@@ -5,6 +5,10 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/bookofmonth-staging/**",
+        "destination": "/bookofmonth-staging/index.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

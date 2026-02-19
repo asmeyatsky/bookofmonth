@@ -140,8 +140,9 @@ const origin = Platform.OS === 'web' && typeof window !== 'undefined'
     ? window.location.origin
     : 'http://localhost:3003';
 
+const basePath = import.meta.env.VITE_BASE_PATH || '';
 const linking = {
-    prefixes: [origin],
+    prefixes: [origin + basePath],
     config: {
         screens: {
             Login: 'login',
