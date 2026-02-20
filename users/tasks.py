@@ -49,17 +49,11 @@ The Book of the Month Team
 
 def process_daily_content():
     """Process and ingest daily news content."""
-    from content_pipeline.application.use_cases.ingest_news_events_use_case import IngestNewsEventsUseCase
-    from content_pipeline.infrastructure.repositories.news_event_repository import DjangoNewsEventRepository
+    from django.core.management import call_command
 
-    repository = DjangoNewsEventRepository()
-    use_case = IngestNewsEventsUseCase(repository)
-
-    result = use_case.execute(days_back=1)
-
-    count = result.get('events_processed', 0)
-    logger.info("Processed %d news events", count)
-    return f"Processed {count} news events"
+    call_command('ingest_news', query='world news for children', days_ago=1)
+    logger.info("Daily content ingestion completed")
+    return "Daily content ingestion completed"
 
 
 def generate_monthly_book(year=None, month=None):
