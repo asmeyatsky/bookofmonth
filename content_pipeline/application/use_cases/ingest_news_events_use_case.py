@@ -1,6 +1,6 @@
 from dataclasses import replace
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from content_pipeline.domain.ports.external_service_ports import NewsAggregatorPort, RawNewsArticle
 from content_pipeline.domain.ports.repository_ports import NewsEventRepositoryPort
@@ -29,7 +29,7 @@ class IngestNewsEventsUseCase:
         self.content_processing_service.gemini_api = self.gemini_api
         self.content_processing_service.image_generation = self.image_generation
 
-        since_date = datetime.utcnow() - timedelta(days=days_ago)
+        since_date = datetime.now(timezone.utc) - timedelta(days=days_ago)
         raw_articles: List[RawNewsArticle] = self.news_aggregator.fetch_recent_news(query, since_date)
 
         for article in raw_articles:

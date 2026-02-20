@@ -1,6 +1,6 @@
 from dataclasses import replace
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from content_pipeline.domain.entities import NewsEvent, Fact
 from content_pipeline.domain.value_objects import Category, GeographicLocation, AgeRange
 from content_pipeline.domain.ports.gemini_api_port import GeminiApiPort
@@ -29,7 +29,11 @@ class ContentProcessingService:
         return events
 
     def ensure_timeliness(self, event: NewsEvent, max_age_days: int = 7) -> bool:
-        return (datetime.utcnow() - event.published_at) < timedelta(days=max_age_days)
+        now = datetime.now(timezone.utc)
+        published = event.published_at
+        if published.tzinfo is None:
+            published = published.replace(tzinfo=timezone.utc)
+        return (now - published) < timedelta(days=max_age_days)
 
     def adapt_content_for_age(self, event: NewsEvent, target_age_level: AgeRange = AgeRange.AGE_7_9) -> NewsEvent:
         adapted_content = self.gemini_api.adapt_content_for_age(event.raw_content, target_age_level.value)
