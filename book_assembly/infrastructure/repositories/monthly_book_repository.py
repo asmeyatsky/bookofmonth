@@ -26,9 +26,12 @@ class DjangoMonthlyBookRepository(MonthlyBookRepositoryPort):
 
     def _to_orm_model(self, entity: MonthlyBook) -> MonthlyBookModel:
         try:
-            model = MonthlyBookModel.objects.get(id=entity.id)
+            model = MonthlyBookModel.objects.get(year=entity.year, month=entity.month)
         except MonthlyBookModel.DoesNotExist:
-            model = MonthlyBookModel(id=entity.id)
+            try:
+                model = MonthlyBookModel.objects.get(id=entity.id)
+            except MonthlyBookModel.DoesNotExist:
+                model = MonthlyBookModel(id=entity.id)
 
         model.month = entity.month
         model.year = entity.year
