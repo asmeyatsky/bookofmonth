@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import replace
 from typing import List
 from datetime import datetime, timedelta, timezone
@@ -38,7 +39,7 @@ class IngestNewsEventsUseCase:
                 continue
 
             news_event = NewsEvent(
-                id=str(hash(article.url)),
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, article.url)),
                 title=article.title,
                 raw_content=article.content,
                 source_url=article.url,
