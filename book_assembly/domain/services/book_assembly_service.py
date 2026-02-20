@@ -11,13 +11,14 @@ class BookAssemblyService:
         self.news_event_repository = news_event_repository
 
     def assemble_book_for_month(self, year: int, month: int) -> MonthlyBook:
-        # Fetch all processed news events for the given month and year
-        # This is a placeholder for a more sophisticated query
-        all_events = self.news_event_repository.get_events_for_processing()
-        events_for_month = [
-            event for event in all_events
-            if event.published_at.year == year and event.published_at.month == month
-        ]
+        if hasattr(self.news_event_repository, 'get_events_for_month'):
+            events_for_month = self.news_event_repository.get_events_for_month(year, month)
+        else:
+            all_events = self.news_event_repository.get_events_for_processing()
+            events_for_month = [
+                event for event in all_events
+                if event.published_at.year == year and event.published_at.month == month
+            ]
 
         # Create a MonthlyBook
         monthly_book = MonthlyBook(

@@ -61,8 +61,14 @@ class DjangoNewsEventRepository(NewsEventRepositoryPort):
         model.save()
 
     def get_events_for_processing(self) -> List[NewsEvent]:
-        # Example: get events that are raw or need reprocessing
         models = NewsEventModel.objects.filter(processing_status__in=["RAW", "PENDING_REPROCESS"]).order_by('published_at')
+        return [self._to_domain_entity(model) for model in models]
+
+    def get_events_for_month(self, year: int, month: int) -> List[NewsEvent]:
+        models = NewsEventModel.objects.filter(
+            published_at__year=year,
+            published_at__month=month,
+        ).order_by('published_at')
         return [self._to_domain_entity(model) for model in models]
 
     def update_processing_status(self, event_id: str, status: str) -> None:
