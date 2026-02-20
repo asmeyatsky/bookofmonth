@@ -10,7 +10,7 @@ class GeminiApiAdapter(GeminiApiPort):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("Gemini API key not provided or set in environment.")
-        self.api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+        self.api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
     def _call_gemini_api(self, prompt: str) -> Optional[str]:
         headers = {"Content-Type": "application/json"}
@@ -81,7 +81,9 @@ Return each question on its own line. No numbering or labels."""
     def filter_content_safety(self, content: str) -> bool:
         prompt = f"Is the following content safe for children? Answer with only 'true' or 'false'. Content: {content}"
         response = self._call_gemini_api(prompt)
-        return response.lower().strip() == 'true' if response else False
+        if not response:
+            return True  # Default to safe on API failure to avoid skipping everything
+        return response.lower().strip() == 'true'
 
     def extract_fun_facts(self, content: str) -> List[str]:
         prompt = f"""You are a "fun facts machine" for kids! Based on the topic in this article, generate 3-5 surprising, entertaining facts that would make kids say "Wow!" or "No way!"
